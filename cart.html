@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Cart | UniMart</title>
+    <link rel="icon" type="image/png" href="image/logo.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .bank-badge {
+      width: 44px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 800;
+      display: inline-grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .bank-option-card {
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+    .bank-option-card:hover,
+    .bank-option-card:has(input:checked) {
+      border-color: #6d28d9 !important;
+      background-color: rgba(109, 40, 217, 0.08);
+    }
+    /* Susunan baris item troli sebaris (Checkbox | Produk | Kuantiti & Remove) */
+#cart-items > div,
+#cart-items > li {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex-wrap: nowrap !important;
+}
+
+.cart-item-select-wrap {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.cart-row-original-content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  flex: 1 1 auto !important;
+  min-width: 0;
+}
+
+/* Pastikan nama & harga produk tidak terhimpit */
+.cart-row-original-content > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Pastikan kumpulan butang kuantiti & remove kekal sebaris di sebelah kanan nama produk */
+.cart-row-original-content > div:last-child,
+.cart-row-actions {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Responsif untuk skrin telefon yang sempit */
+@media (max-width: 576px) {
+  .cart-row-original-content {
+    flex-wrap: wrap !important;
+  }
+  .cart-row-original-content > div:last-child {
+    margin-left: auto;
+  }
+}
+  </style>
+</head>
+<body data-page="cart">
+  <div id="app-header"></div>
+  <div class="app-shell">
+    <aside id="app-sidebar"></aside>
+    <main class="main-content">
+      <div class="page-heading">
+        <span class="eyebrow">READY WHEN YOU ARE</span>
+        <h1>My cart</h1>
+        <p>Review your product and service selections before checkout.</p>
+      </div>
+
+      <div class="row g-4">
+        <!-- KOLUM KIRI: Senarai Item Cart -->
+        <div class="col-lg-7">
+          <div class="content-card">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h2 class="h5 mb-0">Cart Items</h2>
+              <a href="products.html" class="text-link small">+ Add more items</a>
+            </div>
+            <!-- BAR SELECT ALL DALAM CART.HTML -->
+<div class="d-flex justify-content-between align-items-center p-3 mb-3 rounded-4 border" id="cart-select-bar">
+  <div class="form-check d-flex align-items-center gap-2 mb-0">
+    <input class="form-check-input mt-0" type="checkbox" id="cart-select-all" checked style="width: 18px; height: 18px; cursor: pointer;">
+    <label class="form-check-label fw-semibold" for="cart-select-all" style="cursor: pointer;">
+      Select All Items (<span id="cart-selected-count">0</span> selected)
+    </label>
+  </div>
+  <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none p-0 fw-semibold" id="cart-remove-selected">
+    Remove Selected
+  </button>
+</div>
+            <div id="cart-items"></div>
+          </div>
+        </div>
+
+        <!-- KOLUM KANAN (SEBELAH LIST CART): UniMart Wallet + Order Summary -->
+        <div class="col-lg-5">
+          <!-- Kad Baki UniMart Wallet (Sentiasa Dipaparkan) -->
+          <div class="content-card mb-3" style="background: linear-gradient(135deg, #5e38b5 0%, #44248c 100%); color: #ffffff;">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <span class="small d-block" style="color: #e6dcfb; letter-spacing: 0.5px;">UNIMART WALLET BALANCE</span>
+                <strong class="fs-3 fw-bold" id="wallet-balance-display">RM0.00</strong>
+              </div>
+              <button type="button" class="btn btn-light btn-sm fw-bold px-3 py-2" id="open-topup-btn" style="color: #4c289e; border-radius: 10px; width: auto;">
+                + Reload
+              </button>
+            </div>
+          </div>
+          <!-- MODAL RELOAD UNIMART WALLET -->
+<div id="reload-wallet-modal" class="perf-modal-overlay" style="display: none;">
+  <div class="perf-modal-box" style="max-width: 440px; border-radius: 24px; padding: 26px;">
+
+    <!-- LANGKAH 1: MASUKKAN JUMLAH TOP UP -->
+    <div id="topup-step-amount">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <h4 class="fw-bold mb-0">Reload UniMart Wallet</h4>
+        <button type="button" class="btn-close close-wallet-modal" aria-label="Close"></button>
+      </div>
+      <p class="small text-muted mb-3">
+        Current Balance: <strong style="color: #6d28d9;" id="modal-wallet-bal">RM20.00</strong>
+      </p>
+
+      <!-- Butang Pilihan Pantas -->
+      <div class="d-flex gap-2 mb-3">
+        <button type="button" class="btn btn-outline-secondary flex-fill rounded-pill topup-preset" data-val="10">RM10</button>
+        <button type="button" class="btn btn-outline-secondary flex-fill rounded-pill topup-preset" data-val="20">RM20</button>
+        <button type="button" class="btn btn-outline-secondary flex-fill rounded-pill topup-preset" data-val="50">RM50</button>
+        <button type="button" class="btn btn-outline-secondary flex-fill rounded-pill topup-preset" data-val="100">RM100</button>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label small fw-bold">Enter Reload Amount (RM)</label>
+        <input type="number" id="topup-amount-input" class="form-control form-control-lg" value="20" min="1" step="1" style="border-radius: 14px;">
+      </div>
+
+      <button type="button" id="btn-confirm-topup" class="btn btn-primary w-100 fw-bold" style="border-radius: 999px; height: 46px;">
+        Confirm Top Up
+      </button>
+    </div>
+
+    <!-- LANGKAH 2: PILIH NAMA BANK (FPX ONLINE BANKING) -->
+    <div id="topup-step-bank" style="display: none;">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <div class="d-flex align-items-center gap-2">
+          <button type="button" id="btn-back-to-amount" class="btn btn-sm btn-light rounded-circle" title="Back">←</button>
+          <h5 class="fw-bold mb-0">Select Online Banking</h5>
+        </div>
+        <button type="button" class="btn-close close-wallet-modal" aria-label="Close"></button>
+      </div>
+      <p class="small text-muted mb-3">
+        Top Up Amount: <strong class="text-success" id="selected-topup-display">RM20.00</strong> · FPX Gateway
+      </p>
+
+      <div class="d-flex flex-column gap-2 mb-3" id="fpx-bank-list">
+        <label class="bank-option-card d-flex align-items-center justify-content-between p-3 rounded-4 border" style="cursor: pointer;">
+          <div class="d-flex align-items-center gap-3">
+            <span class="bank-badge" style="background:#facc15; color:#18181b;">M2U</span>
+            <div>
+              <div class="fw-bold small">Maybank2u</div>
+              <small class="text-muted" style="font-size: 11px;">Malayan Banking Berhad</small>
+            </div>
+          </div>
+          <input type="radio" name="fpx_bank" value="Maybank2u" checked>
+        </label>
+
+        <label class="bank-option-card d-flex align-items-center justify-content-between p-3 rounded-4 border" style="cursor: pointer;">
+          <div class="d-flex align-items-center gap-3">
+            <span class="bank-badge" style="background:#dc2626; color:#ffffff;">CIMB</span>
+            <div>
+              <div class="fw-bold small">CIMB Clicks</div>
+              <small class="text-muted" style="font-size: 11px;">CIMB Bank Berhad</small>
+            </div>
+          </div>
+          <input type="radio" name="fpx_bank" value="CIMB Clicks">
+        </label>
+
+        <label class="bank-option-card d-flex align-items-center justify-content-between p-3 rounded-4 border" style="cursor: pointer;">
+          <div class="d-flex align-items-center gap-3">
+            <span class="bank-badge" style="background:#991b1b; color:#ffffff;">BIMB</span>
+            <div>
+              <div class="fw-bold small">Bank Islam</div>
+              <small class="text-muted" style="font-size: 11px;">Bank Islam Malaysia Berhad</small>
+            </div>
+          </div>
+          <input type="radio" name="fpx_bank" value="Bank Islam">
+        </label>
+
+        <label class="bank-option-card d-flex align-items-center justify-content-between p-3 rounded-4 border" style="cursor: pointer;">
+          <div class="d-flex align-items-center gap-3">
+            <span class="bank-badge" style="background:#0284c7; color:#ffffff;">RHB</span>
+            <div>
+              <div class="fw-bold small">RHB Now</div>
+              <small class="text-muted" style="font-size: 11px;">RHB Bank Berhad</small>
+            </div>
+          </div>
+          <input type="radio" name="fpx_bank" value="RHB Now">
+        </label>
+
+        <label class="bank-option-card d-flex align-items-center justify-content-between p-3 rounded-4 border" style="cursor: pointer;">
+          <div class="d-flex align-items-center gap-3">
+            <span class="bank-badge" style="background:#1d4ed8; color:#ffffff;">PBe</span>
+            <div>
+              <div class="fw-bold small">Public Bank</div>
+              <small class="text-muted" style="font-size: 11px;">Public Bank Berhad</small>
+            </div>
+          </div>
+          <input type="radio" name="fpx_bank" value="Public Bank">
+        </label>
+      </div>
+
+      <button type="button" id="btn-proceed-bank" class="btn btn-primary w-100 fw-bold" style="border-radius: 999px; height: 46px;">
+        Proceed to Bank →
+      </button>
+    </div>
+
+    <!-- LANGKAH 3: ANIMASI REDIRECTING TO BANK -->
+    <div id="topup-step-redirect" class="text-center py-4" style="display: none;">
+      <div class="spinner-border mb-3" role="status" style="width: 3rem; height: 3rem; color: #6d28d9;"></div>
+      <h5 class="fw-bold mb-1" id="redirect-bank-title">Redirecting to Maybank2u...</h5>
+      <p class="small text-muted mb-3">Please wait while we securely connect to your FPX banking gateway.</p>
+      <div class="p-2 rounded-3 bg-light small fw-semibold" id="redirect-bank-summary">
+        Amount: RM20.00 · Status: Authorizing...
+      </div>
+    </div>
+
+  </div>
+</div>
+
+          <!-- Kad Order Summary & Payment -->
+          <div class="content-card">
+            <h2 class="h5 mb-3">Order Summary &amp; Payment</h2>
+
+            <!-- Kaedah Penghantaran / Pengambilan -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Fulfilment Method</label>
+              <select class="form-select" id="fulfilment">
+                <option value="pickup">Self Pickup — Free (RM0.00)</option>
+                <option value="delivery">Campus Delivery (+RM3.00)</option>
+              </select>
+            </div>
+
+            <!-- Pilihan Jenis Pembayaran -->
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Payment Method</label>
+              <select class="form-select" id="payment-method">
+                <option value="wallet">UniMart Wallet</option>
+                <option value="cash">Cash (Pay on Pickup / Delivery)</option>
+                <option value="fpx">FPX Online Banking</option>
+              </select>
+            </div>
+
+            <!-- Bahagian Kiraan Subtotal, Delivery Fee & Total -->
+            <div class="border-top pt-2 mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-muted">Subtotal</span>
+                <span class="fw-semibold" id="cart-subtotal">RM0.00</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted">Delivery Fee</span>
+                <span class="fw-semibold" id="cart-delivery-fee">RM0.00</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                <span class="fw-bold">Total</span>
+                <strong class="fs-5 text-primary" id="cart-total">RM0.00</strong>
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-100 fw-semibold" id="checkout-button">Place Order &amp; Pay</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="app-footer"></div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const CART_KEY = (typeof STORE !== "undefined" && STORE.cart) ? STORE.cart : "unimart_cart";
+      const LISTINGS_KEY = (typeof STORE !== "undefined" && STORE.listings) ? STORE.listings : "unimart_listings_v9";
+
+      const fulfilmentEl = document.getElementById("fulfilment");
+      const subtotalEl = document.getElementById("cart-subtotal");
+      const feeEl = document.getElementById("cart-delivery-fee");
+      const totalEl = document.getElementById("cart-total");
+      const cartContainer = document.getElementById("cart-items");
+      const checkoutBtn = document.getElementById("checkout-button");
+      const paymentMethodEl = document.getElementById("payment-method");
+
+      function getCartData() {
+        if (typeof cart === "function") return cart();
+        try {
+          return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+        } catch {
+          return [];
+        }
+      }
+
+      function saveCartData(arr) {
+        if (typeof setData === "function") {
+          setData(CART_KEY, arr);
+        } else {
+          localStorage.setItem(CART_KEY, JSON.stringify(arr));
+        }
+        if (typeof updateCartBadge === "function") updateCartBadge();
+      }
+
+      function getListingsData() {
+        if (typeof listings === "function") return listings();
+        try {
+          return JSON.parse(localStorage.getItem(LISTINGS_KEY) || "[]");
+        } catch {
+          return [];
+        }
+      }
+
+      // Pastikan setiap item dalam cart ada status `selected` (default: true)
+      function ensureSelectedFlags() {
+        const rawCart = getCartData();
+        let changed = false;
+        rawCart.forEach(item => {
+          if (typeof item.selected !== "boolean") {
+            item.selected = true;
+            changed = true;
+          }
+        });
+        if (changed) saveCartData(rawCart);
+        return rawCart;
+      }
+
+      // Kira Subtotal, Delivery Fee & Grand Total HANYA untuk item yang di-tick
+      function calculateGrandTotal() {
+        const rawCart = ensureSelectedFlags();
+        const rawListings = getListingsData();
+
+        const validItems = rawCart.filter(entry => {
+          const item = rawListings.find(p => p.id === entry.id);
+          return item && item.type !== "preloved";
+        });
+
+        const selectedValidItems = validItems.filter(entry => entry.selected !== false);
+
+        const subtotal = selectedValidItems.reduce((sum, entry) => {
+          const item = rawListings.find(p => p.id === entry.id);
+          const unitPrice = entry.price !== undefined ? Number(entry.price) : Number(item.price || 0);
+          return sum + (unitPrice * Number(entry.qty || 1));
+        }, 0);
+
+        const deliveryFee = (selectedValidItems.length > 0 && fulfilmentEl && fulfilmentEl.value === "delivery") ? 3.00 : 0.00;
+
+        return {
+          subtotal,
+          deliveryFee,
+          grandTotal: subtotal + deliveryFee,
+          totalValidCount: validItems.length,
+          selectedCount: selectedValidItems.length,
+          selectedItems: selectedValidItems
+        };
+      }
+
+      // Suntik checkbox ke dalam setiap baris tanpa merosakkan susunan asal
+      function renderCheckboxesAndSummary() {
+        const rawCart = ensureSelectedFlags();
+        const { subtotal, deliveryFee, grandTotal, totalValidCount, selectedCount } = calculateGrandTotal();
+
+        const selectBarEl = document.getElementById("cart-select-bar");
+        const selectAllEl = document.getElementById("cart-select-all");
+        const selectedCountEl = document.getElementById("cart-selected-count");
+
+        if (selectBarEl) {
+          selectBarEl.style.display = totalValidCount > 0 ? "flex" : "none";
+        }
+        if (selectedCountEl) {
+          selectedCountEl.textContent = selectedCount;
+        }
+        if (selectAllEl) {
+          selectAllEl.checked = totalValidCount > 0 && selectedCount === totalValidCount;
+          selectAllEl.indeterminate = selectedCount > 0 && selectedCount < totalValidCount;
+        }
+
+        // Suntik checkbox kemas di bahagian kiri setiap baris produk
+// Suntik checkbox kemas di bahagian kiri setiap baris produk (susunan sebaris)
+        if (cartContainer && rawCart.length > 0) {
+          const rows = Array.from(cartContainer.children).filter(el => el.tagName !== "SCRIPT");
+
+          rows.forEach((row, idx) => {
+            const entry = rawCart[idx];
+            if (!entry) return;
+
+            row.style.display = "flex";
+            row.style.alignItems = "center";
+            row.style.justifyContent = "space-between";
+            row.style.gap = "12px";
+
+            let cbWrap = row.querySelector(".cart-item-select-wrap");
+            if (!cbWrap) {
+              const contentWrap = document.createElement("div");
+              contentWrap.className = "cart-row-original-content";
+              while (row.firstChild) {
+                contentWrap.appendChild(row.firstChild);
+              }
+
+              cbWrap = document.createElement("div");
+              cbWrap.className = "cart-item-select-wrap";
+              cbWrap.innerHTML = `<input type="checkbox" class="form-check-input cart-item-checkbox m-0" data-id="${entry.id}" data-index="${idx}" style="width: 18px; height: 18px; cursor: pointer;">`;
+
+              row.appendChild(cbWrap);
+              row.appendChild(contentWrap);
+            }
+
+            const cb = cbWrap.querySelector(".cart-item-checkbox");
+            if (cb) {
+              cb.dataset.index = idx;
+              cb.checked = entry.selected !== false;
+            }
+
+            const contentWrap = row.querySelector(".cart-row-original-content");
+            if (contentWrap) {
+              contentWrap.style.opacity = (entry.selected !== false) ? "1" : "0.5";
+            }
+          });
+        }        // Kemas kini paparan Subtotal, Delivery Fee & Grand Total
+        if (subtotalEl) subtotalEl.textContent = "RM" + subtotal.toFixed(2);
+        if (feeEl) feeEl.textContent = "RM" + deliveryFee.toFixed(2);
+        if (totalEl) totalEl.textContent = "RM" + grandTotal.toFixed(2);
+
+        // Lumpuhkan butang Place Order & Pay jika tiada satu pun item dipilih
+        if (checkoutBtn) {
+          checkoutBtn.disabled = selectedCount === 0;
+          if (selectedCount === 0) {
+            checkoutBtn.dataset.origLabel = checkoutBtn.dataset.origLabel || checkoutBtn.textContent;
+            checkoutBtn.textContent = "Select item(s) to pay";
+          } else if (checkoutBtn.dataset.origLabel) {
+            checkoutBtn.textContent = checkoutBtn.dataset.origLabel;
+          }
+        }
+      }
+
+      // Kawalan klik Checkbox individu & Select All
+      document.addEventListener("change", (e) => {
+        if (e.target.classList.contains("cart-item-checkbox")) {
+          const idx = Number(e.target.dataset.index);
+          const rawCart = getCartData();
+          if (rawCart[idx]) {
+            rawCart[idx].selected = e.target.checked;
+            saveCartData(rawCart);
+            renderCheckboxesAndSummary();
+          }
+        }
+
+        if (e.target.id === "cart-select-all") {
+          const checked = e.target.checked;
+          const updated = getCartData().map(item => ({ ...item, selected: checked }));
+          saveCartData(updated);
+          renderCheckboxesAndSummary();
+        }
+      });
+
+      // Butang Remove Selected
+      document.getElementById("cart-remove-selected")?.addEventListener("click", () => {
+        const rawCart = getCartData();
+        const toRemove = rawCart.filter(x => x.selected !== false);
+        if (toRemove.length === 0) return;
+        if (!confirm(`Remove ${toRemove.length} selected item(s) from your cart?`)) return;
+
+        saveCartData(rawCart.filter(x => x.selected === false));
+        location.reload();
+      });
+
+      if (fulfilmentEl) {
+        fulfilmentEl.addEventListener("change", renderCheckboxesAndSummary);
+      }
+
+      // Pantau apabila app.js melukis semula #cart-items (tambah/tolak kuantiti atau padam item)
+      let isSyncing = false;
+      if (cartContainer) {
+        new MutationObserver(() => {
+          if (isSyncing) return;
+          isSyncing = true;
+          renderCheckboxesAndSummary();
+          isSyncing = false;
+        }).observe(cartContainer, { childList: true });
+
+        cartContainer.addEventListener("click", () => setTimeout(renderCheckboxesAndSummary, 50));
+      }
+
+      renderCheckboxesAndSummary();
+
+      // =========================================================
+      // 2. MODAL FPX BANKING (UNTUK WALLET RELOAD & FPX CHECKOUT)
+      // =========================================================
+      const modal = document.getElementById("reload-wallet-modal");
+      const openTopupBtn = document.getElementById("open-topup-btn");
+      const walletDisplayEl = document.getElementById("wallet-balance-display");
+      const modalBalEl = document.getElementById("modal-wallet-bal");
+
+      const stepAmount = document.getElementById("topup-step-amount");
+      const stepBank = document.getElementById("topup-step-bank");
+      const stepRedirect = document.getElementById("topup-step-redirect");
+
+      const amountInput = document.getElementById("topup-amount-input");
+      const confirmBtn = document.getElementById("btn-confirm-topup");
+      const backBtn = document.getElementById("btn-back-to-amount");
+      const proceedBankBtn = document.getElementById("btn-proceed-bank");
+
+      let bankFlowMode = "topup";
+      let pendingAmount = 0;
+
+      if (modal) {
+        Object.assign(modal.style, {
+          position: "fixed",
+          inset: "0",
+          backgroundColor: "rgba(15, 10, 32, 0.6)",
+          zIndex: "9999",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "16px"
+        });
+      }
+
+      function applyModalTheme() {
+        const box = modal?.querySelector(".perf-modal-box");
+        if (!box) return;
+        const isDark = document.body.classList.contains("dark");
+        box.style.backgroundColor = isDark ? "#1d1536" : "#ffffff";
+        box.style.color = isDark ? "#ffffff" : "#1f1b2e";
+        box.style.width = "100%";
+        box.style.boxShadow = "0 24px 60px rgba(0, 0, 0, 0.25)";
+      }
+
+      function getWalletKey() {
+        const user = (typeof current === "function")
+          ? current()
+          : JSON.parse(localStorage.getItem("unimart_current") || "null");
+        return "unimart_wallet_" + (user?.id || user?.email || "guest");
+      }
+
+      function refreshWalletDisplay() {
+        const bal = parseFloat(localStorage.getItem(getWalletKey()) || "20.00");
+        if (walletDisplayEl) walletDisplayEl.textContent = "RM" + bal.toFixed(2);
+        if (modalBalEl) modalBalEl.textContent = "RM" + bal.toFixed(2);
+      }
+
+      refreshWalletDisplay();
+
+      function resetAndCloseModal() {
+        if (!modal) return;
+        modal.style.display = "none";
+        stepAmount.style.display = "block";
+        stepBank.style.display = "none";
+        stepRedirect.style.display = "none";
+        if (backBtn) backBtn.style.display = "inline-block";
+      }
+
+      document.querySelectorAll(".close-wallet-modal").forEach(btn => {
+        btn.addEventListener("click", resetAndCloseModal);
+      });
+
+      modal?.addEventListener("click", (e) => {
+        if (e.target === modal) resetAndCloseModal();
+      });
+
+      // --- ALIRAN A: RELOAD WALLET (+ Reload) ---
+      openTopupBtn?.addEventListener("click", () => {
+        bankFlowMode = "topup";
+        refreshWalletDisplay();
+        applyModalTheme();
+        stepAmount.style.display = "block";
+        stepBank.style.display = "none";
+        stepRedirect.style.display = "none";
+        if (backBtn) backBtn.style.display = "inline-block";
+        if (modal) modal.style.display = "flex";
+      });
+
+      document.querySelectorAll(".topup-preset").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (amountInput) amountInput.value = btn.dataset.val;
+        });
+      });
+
+      confirmBtn?.addEventListener("click", () => {
+        const amt = parseFloat(amountInput?.value || "0");
+        if (!amt || amt <= 0) {
+          alert("Please enter a valid reload amount.");
+          return;
+        }
+        pendingAmount = amt;
+        document.getElementById("selected-topup-display").textContent = "RM" + amt.toFixed(2);
+        stepAmount.style.display = "none";
+        stepBank.style.display = "block";
+      });
+
+      backBtn?.addEventListener("click", () => {
+        if (bankFlowMode === "topup") {
+          stepBank.style.display = "none";
+          stepAmount.style.display = "block";
+        } else {
+          resetAndCloseModal();
+        }
+      });
+
+function getCurrentUserObj() {
+        if (typeof current === "function") return current();
+        try {
+          return JSON.parse(localStorage.getItem("unimart_current") || "null");
+        } catch {
+          return null;
+        }
+      }
+
+      function getWalletKey() {
+        const user = getCurrentUserObj();
+        return "unimart_wallet_" + (user?.id || user?.email || "guest");
+      }
+
+      function getSyncedWalletBalance() {
+        const key = getWalletKey();
+        const user = getCurrentUserObj();
+        const stored = localStorage.getItem(key);
+
+        if (stored !== null && !isNaN(parseFloat(stored))) {
+          return parseFloat(stored);
+        }
+        if (user && typeof user.wallet === "number") {
+          localStorage.setItem(key, user.wallet.toFixed(2));
+          return user.wallet;
+        }
+        localStorage.setItem(key, "20.00");
+        return 20.00;
+      }
+
+      function setSyncedWalletBalance(newBal) {
+        const cleanBal = Math.max(0, Number(newBal || 0));
+        const key = getWalletKey();
+        localStorage.setItem(key, cleanBal.toFixed(2));
+
+        const user = getCurrentUserObj();
+        if (user) {
+          user.wallet = cleanBal;
+          localStorage.setItem("unimart_current", JSON.stringify(user));
+
+          const usersKey = (typeof STORE !== "undefined" && STORE.users) ? STORE.users : "unimart_users";
+          try {
+            const allUsers = JSON.parse(localStorage.getItem(usersKey) || "[]");
+            const idx = allUsers.findIndex(u => u.id === user.id || u.email === user.email);
+            if (idx !== -1) {
+              allUsers[idx].wallet = cleanBal;
+              localStorage.setItem(usersKey, JSON.stringify(allUsers));
+            }
+          } catch {}
+        }
+
+        if (walletDisplayEl) walletDisplayEl.textContent = "RM" + cleanBal.toFixed(2);
+        if (modalBalEl) modalBalEl.textContent = "RM" + cleanBal.toFixed(2);
+      }
+
+      function refreshWalletDisplay() {
+        const bal = getSyncedWalletBalance();
+        setSyncedWalletBalance(bal);
+      }
+
+      refreshWalletDisplay();
+
+      function resetAndCloseModal() {
+        if (!modal) return;
+        modal.style.display = "none";
+        stepAmount.style.display = "block";
+        stepBank.style.display = "none";
+        stepRedirect.style.display = "none";
+        if (backBtn) backBtn.style.display = "inline-block";
+      }
+
+      document.querySelectorAll(".close-wallet-modal").forEach(btn => {
+        btn.addEventListener("click", resetAndCloseModal);
+      });
+
+      modal?.addEventListener("click", (e) => {
+        if (e.target === modal) resetAndCloseModal();
+      });
+
+      // --- ALIRAN A: RELOAD WALLET (+ Reload) ---
+      openTopupBtn?.addEventListener("click", () => {
+        bankFlowMode = "topup";
+        refreshWalletDisplay();
+        applyModalTheme();
+        stepAmount.style.display = "block";
+        stepBank.style.display = "none";
+        stepRedirect.style.display = "none";
+        if (backBtn) backBtn.style.display = "inline-block";
+        if (modal) modal.style.display = "flex";
+      });
+
+      document.querySelectorAll(".topup-preset").forEach(btn => {
+        btn.addEventListener("click", () => {
+          if (amountInput) amountInput.value = btn.dataset.val;
+        });
+      });
+
+      confirmBtn?.addEventListener("click", () => {
+        const amt = parseFloat(amountInput?.value || "0");
+        if (!amt || amt <= 0) {
+          alert("Please enter a valid reload amount.");
+          return;
+        }
+        pendingAmount = amt;
+        document.getElementById("selected-topup-display").textContent = "RM" + amt.toFixed(2);
+        stepAmount.style.display = "none";
+        stepBank.style.display = "block";
+      });
+
+      backBtn?.addEventListener("click", () => {
+        if (bankFlowMode === "topup") {
+          stepBank.style.display = "none";
+          stepAmount.style.display = "block";
+        } else {
+          resetAndCloseModal();
+        }
+      });
+
+      // --- ALIRAN B: PLACE ORDER & PAY (HANYA BAYAR ITEM YANG DI-TICK) ---
+      checkoutBtn?.addEventListener("click", (e) => {
+        const { grandTotal, selectedCount } = calculateGrandTotal();
+        if (selectedCount === 0) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          alert("Please tick at least one item in your cart to pay.");
+          return;
+        }
+
+        const unselectedItems = getCartData().filter(x => x.selected === false);
+        const selectedOnly = getCartData().filter(x => x.selected !== false);
+        const method = paymentMethodEl ? paymentMethodEl.value : "wallet";
+
+        // 1. BAYARAN GUNA UNIMART WALLET
+        if (method === "wallet") {
+          const currentBal = getSyncedWalletBalance();
+          if (currentBal < grandTotal) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            alert(`Insufficient UniMart Wallet balance (RM${currentBal.toFixed(2)}). Total required is RM${grandTotal.toFixed(2)}. Please reload your wallet.`);
+            return;
+          }
+
+          const updatedBal = currentBal - grandTotal;
+          setSyncedWalletBalance(updatedBal);
+
+          const origVal = paymentMethodEl.value;
+          paymentMethodEl.value = "fpx";
+          saveCartData(selectedOnly);
+
+          setTimeout(() => {
+            paymentMethodEl.value = origVal;
+            setSyncedWalletBalance(updatedBal);
+            if (unselectedItems.length > 0) {
+              saveCartData(unselectedItems);
+              location.reload();
+            }
+          }, 150);
+          return;
+        }
+
+        // 2. BAYARAN GUNA FPX ONLINE BANKING
+        if (method === "fpx") {
+          if (checkoutBtn.dataset.fpxApproved === "true") {
+            delete checkoutBtn.dataset.fpxApproved;
+            saveCartData(selectedOnly);
+            setTimeout(() => {
+              if (unselectedItems.length > 0) {
+                saveCartData(unselectedItems);
+                location.reload();
+              }
+            }, 150);
+            return;
+          }
+
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          bankFlowMode = "checkout";
+          pendingAmount = grandTotal;
+
+          applyModalTheme();
+          document.getElementById("selected-topup-display").textContent = "RM" + grandTotal.toFixed(2);
+          stepAmount.style.display = "none";
+          stepRedirect.style.display = "none";
+          stepBank.style.display = "block";
+          if (backBtn) backBtn.style.display = "none";
+          if (modal) modal.style.display = "flex";
+          return;
+        }
+
+        // 3. BAYARAN TUNAI (CASH / COD)
+        saveCartData(selectedOnly);
+        setTimeout(() => {
+          if (unselectedItems.length > 0) {
+            saveCartData(unselectedItems);
+            location.reload();
+          }
+        }, 150);
+      }, true);
+
+      // --- PENGESAHAN BANK & ANIMASI REDIRECTING ---
+      proceedBankBtn?.addEventListener("click", () => {
+        const chosenBank = document.querySelector('input[name="fpx_bank"]:checked')?.value || "Maybank2u";
+        const amt = pendingAmount;
+
+        stepBank.style.display = "none";
+        stepRedirect.style.display = "block";
+
+        document.getElementById("redirect-bank-title").textContent = `Redirecting to ${chosenBank}...`;
+        document.getElementById("redirect-bank-summary").textContent =
+          `${bankFlowMode === "topup" ? "Reload" : "Order Payment"}: RM${amt.toFixed(2)} · Connecting via FPX...`;
+
+        setTimeout(() => {
+          if (bankFlowMode === "topup") {
+            const currentBal = getSyncedWalletBalance();
+            const newBal = currentBal + amt;
+            setSyncedWalletBalance(newBal);
+
+            resetAndCloseModal();
+
+            if (typeof toast === "function") {
+              toast(`Reload RM${amt.toFixed(2)} via ${chosenBank} successful!`);
+            } else {
+              alert(`Reload RM${amt.toFixed(2)} via ${chosenBank} successful!`);
+            }
+          } else {
+            resetAndCloseModal();
+            if (typeof toast === "function") {
+              toast(`FPX payment via ${chosenBank} approved!`);
+            }
+            if (checkoutBtn) {
+              checkoutBtn.dataset.fpxApproved = "true";
+              checkoutBtn.click();
+            }
+          }
+        }, 2200);
+      });
+    });     </script></body>
+</html>
