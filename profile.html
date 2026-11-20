@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Edit Profile | UniMart</title>
+    <link rel="icon" type="image/png" href="image/logo.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .ig-profile-wrap {
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .ig-photo-card {
+      background: #f6f3ff;
+      border: 1px solid #e5dcff;
+      border-radius: 16px;
+      padding: 16px 20px;
+    }
+    .ig-avatar {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: linear-gradient(135deg, #5e38b5 0%, #835ce0 100%);
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 2px solid #fff;
+      box-shadow: 0 4px 12px rgba(94, 56, 181, 0.2);
+    }
+    .ig-field-group {
+      margin-bottom: 18px;
+    }
+    .ig-field-label {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #1f1b2e;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .ig-input {
+      border-radius: 12px !important;
+      padding: 10px 14px;
+      border: 1px solid #dcd6eb;
+      font-size: 14.5px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .ig-input:focus {
+      border-color: #5e38b5;
+      box-shadow: 0 0 0 3px rgba(94, 56, 181, 0.12);
+    }
+    .ig-helper {
+      font-size: 12px;
+      color: #6c6680;
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+    .ig-section-divider {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+      color: #5e38b5;
+      margin: 24px 0 14px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #eeeaf8;
+    }
+    .role-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: #e9e0ff;
+      color: #4c289e;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body data-page="profile">
+  <div id="app-header"></div>
+  <div class="app-shell">
+    <aside id="app-sidebar"></aside>
+    <main class="main-content">
+      <div class="ig-profile-wrap">
+        <div class="page-heading mb-3">
+          <span class="eyebrow">ACCOUNT SETTINGS</span>
+          <h1 class="h3 mb-1">Edit profile</h1>
+          <p class="small-muted mb-0">Manage your public identity, role details, and contact information.</p>
+        </div>
+
+        <div class="content-card">
+          <form id="user-profile-form">
+            <!-- Bahagian Atas Ala IG: Avatar + Nama + Badge Role + Butang Change Photo -->
+            <div class="ig-photo-card d-flex align-items-center justify-content-between gap-3 mb-4">
+              <div class="d-flex align-items-center gap-3">
+                <div class="ig-avatar" id="profile-avatar-preview">UM</div>
+                <div>
+                  <div class="fw-bold fs-6" id="profile-header-username">@unimart_user</div>
+                  <div class="small text-muted" id="profile-header-fullname">Full Name</div>
+                  <span class="role-badge" id="profile-header-role">Student</span>
+                </div>
+              </div>
+              <div>
+                <input type="file" id="profile-photo-input" accept="image/*" class="d-none">
+                <button type="button" class="btn btn-primary btn-sm fw-semibold px-3 py-2" style="border-radius: 10px; width: auto;" onclick="document.getElementById('profile-photo-input').click()">
+                  Change photo
+                </button>
+              </div>
+            </div>
+
+            <!-- Pilihan Peranan Pengguna (Student / Lecturer / External Seller) -->
+            <div class="ig-field-group">
+              <label class="ig-field-label" for="prof-role">Account Category / Role</label>
+              <select class="form-select ig-input fw-semibold" id="prof-role">
+                <option value="student">Student (Pelajar Kampus)</option>
+                <option value="lecturer">Lecturer / University Staff</option>
+                <option value="external">External Seller / Campus Vendor (Orang Luar)</option>
+              </select>
+              <div class="ig-helper">Select your role so we display the right campus or business details.</div>
+            </div>
+
+            <!-- Maklumat Asas Akaun (Semua Role Ada) -->
+            <div class="ig-section-divider">Public Identity</div>
+
+            <div class="ig-field-group">
+              <label class="ig-field-label" for="prof-fullname">Full Name / Display Name</label>
+              <input type="text" class="form-control ig-input" id="prof-fullname" placeholder="e.g. Nur Aisyah / Dr. Ahmad / Kedai Buku Kampus" required>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-6 ig-field-group">
+                <label class="ig-field-label" for="prof-username">Username</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-light" style="border-radius: 12px 0 0 12px; border-color: #dcd6eb;">@</span>
+                  <input type="text" class="form-control ig-input" id="prof-username" style="border-radius: 0 12px 12px 0 !important;" placeholder="username" required>
+                </div>
+              </div>
+
+              <!-- Field ID Dinamik (Matric ID / Staff ID / SSM atau Business Reg No) -->
+              <div class="col-md-6 ig-field-group">
+                <label class="ig-field-label" for="prof-id-number" id="label-id-number">Student / Matric ID</label>
+                <input type="text" class="form-control ig-input" id="prof-id-number" placeholder="e.g. 2024123456">
+              </div>
+            </div>
+
+            <div class="ig-field-group">
+              <label class="ig-field-label" for="prof-bio">Bio</label>
+              <textarea class="form-control ig-input" id="prof-bio" rows="2" maxlength="150" placeholder="Write a short bio (e.g. Fast response • COD around campus gate)"></textarea>
+              <div class="d-flex justify-content-end ig-helper"><span id="bio-char-count">0</span> / 150</div>
+            </div>
+
+            <!-- BAHAGIAN DINAMIK MENGIKUT ROLE -->
+            <div class="ig-section-divider" id="section-location-title">Campus Accommodation &amp; Contact</div>
+
+            <!-- 1. KHAS UNTUK STUDENT -->
+            <div id="fields-student" class="row g-3">
+              <div class="col-md-7 ig-field-group">
+                <label class="ig-field-label" for="prof-college">Residential College (Nama Kolej)</label>
+                <select class="form-select ig-input" id="prof-college">
+                  <option value="">-- Select Residential College --</option>
+                  <option value="Kolej Tun Dr. Ismail (KTDI)">Kolej Tun Dr. Ismail (KTDI)</option>
+                  <option value="Kolej Tun Hussein Onn (KTHO)">Kolej Tun Hussein Onn (KTHO)</option>
+                  <option value="Kolej Tun Razak (KTR)">Kolej Tun Razak (KTR)</option>
+                  <option value="Kolej Aminuddin Baki (KAB)">Kolej Aminuddin Baki (KAB)</option>
+                  <option value="Kolej Ungku Omar (KUO)">Kolej Ungku Omar (KUO)</option>
+                  <option value="Kolej Ibrahim Yaakub (KIY)">Kolej Ibrahim Yaakub (KIY)</option>
+                  <option value="Kolej Ibu Zain (KIZ)">Kolej Ibu Zain (KIZ)</option>
+                  <option value="Kolej Keris Mas (KKM)">Kolej Keris Mas (KKM)</option>
+                  <option value="Kolej Pendeta Za'ba (KPZ)">Kolej Pendeta Za'ba (KPZ)</option>
+                  <option value="Non-Resident (NR / Luar Kampus)">Non-Resident (NR / Luar Kampus)</option>
+                </select>
+              </div>
+
+              <div class="col-md-5 ig-field-group">
+                <label class="ig-field-label" for="prof-room">Block &amp; Room No. (No. Bilik)</label>
+                <input type="text" class="form-control ig-input" id="prof-room" placeholder="e.g. Blok B, B-3-12">
+              </div>
+            </div>
+
+            <!-- 2. KHAS UNTUK LECTURER / STAFF -->
+            <div id="fields-lecturer" class="row g-3 d-none">
+              <div class="col-md-6 ig-field-group">
+                <label class="ig-field-label" for="prof-faculty">Faculty / Department</label>
+                <input type="text" class="form-control ig-input" id="prof-faculty" placeholder="e.g. Faculty of Information Management">
+              </div>
+
+              <div class="col-md-6 ig-field-group">
+                <label class="ig-field-label" for="prof-office">Office / Room Location</label>
+                <input type="text" class="form-control ig-input" id="prof-office" placeholder="e.g. Level 3, Academic Block A">
+              </div>
+            </div>
+
+            <!-- 3. KHAS UNTUK EXTERNAL SELLER / ORANG LUAR -->
+            <div id="fields-external" class="row g-3 d-none">
+              <div class="col-md-6 ig-field-group">
+                <label class="ig-field-label" for="prof-shop-name">Shop / Brand Name</label>
+                <input type="text" class="form-control ig-input" id="prof-shop-name" placeholder="e.g. Dapur Kak Liza / TechGadget">
+              </div>
+
+              <div class="col-md-6 ig-field-group">
+                <label class="ig-field-label" for="prof-meetup">Preferred Campus Meetup / Area</label>
+                <input type="text" class="form-control ig-input" id="prof-meetup" placeholder="e.g. Main Gate / Kolej Café / Bandar Baru">
+              </div>
+            </div>
+
+            <!-- No Telefon & Email (Semua Role Ada) -->
+            <div class="row g-3">
+              <div class="col-md-6 ig-field-group">
+                <label class="ig-field-label" for="prof-phone">Phone / WhatsApp Number</label>
+                <input type="tel" class="form-control ig-input" id="prof-phone" placeholder="e.g. 012-3456789" required>
+                <div class="ig-helper">Used for buyer/seller coordination &amp; delivery.</div>
+              </div>
+
+              <div class="col-md-6 ig-field-group">
+                <label class="ig-field-label" for="prof-email">Email Address</label>
+                <input type="email" class="form-control ig-input" id="prof-email" readonly style="background-color: #f8f7fc; color: #6c6680;">
+                <div class="ig-helper">Registered account email.</div>
+              </div>
+            </div>
+
+            <!-- Butang Simpan -->
+            <div class="d-flex justify-content-end align-items-center gap-2 pt-3 border-top mt-2">
+              <a href="home.html" class="btn btn-outline-secondary px-4" style="border-radius: 10px;">Cancel</a>
+              <button type="submit" class="btn btn-primary fw-semibold px-4" style="border-radius: 10px; width: auto; margin-left: 200px;">
+                Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="app-footer"></div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const STORAGE_KEY = "unimart_user_profile";
+      const savedProfile = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+      const currentUser = (typeof user === "function" && user()) ? user() : {};
+
+      const roleSelect = document.getElementById("prof-role");
+      const roleBadge = document.getElementById("profile-header-role");
+      const idLabel = document.getElementById("label-id-number");
+      const idInput = document.getElementById("prof-id-number");
+      const sectionTitle = document.getElementById("section-location-title");
+
+      const blocks = {
+        student: document.getElementById("fields-student"),
+        lecturer: document.getElementById("fields-lecturer"),
+        external: document.getElementById("fields-external")
+      };
+
+      const roleLabels = {
+        student: "Student",
+        lecturer: "Lecturer / Staff",
+        external: "External Seller"
+      };
+
+      function updateRoleFields(role) {
+        Object.keys(blocks).forEach(key => {
+          blocks[key].classList.toggle("d-none", key !== role);
+        });
+        roleBadge.textContent = roleLabels[role] || "Student";
+
+        if (role === "student") {
+          idLabel.textContent = "Student / Matric ID";
+          idInput.placeholder = "e.g. 2024123456";
+          sectionTitle.textContent = "Campus Accommodation & Contact";
+        } else if (role === "lecturer") {
+          idLabel.textContent = "Staff ID";
+          idInput.placeholder = "e.g. STF-8841";
+          sectionTitle.textContent = "Faculty / Office & Contact";
+        } else {
+          idLabel.textContent = "SSM / Business Reg. No (Optional)";
+          idInput.placeholder = "e.g. 202403123456 (Optional)";
+          sectionTitle.textContent = "Store / Meetup Location & Contact";
+        }
+      }
+
+      const fields = {
+        fullName: document.getElementById("prof-fullname"),
+        username: document.getElementById("prof-username"),
+        idNumber: document.getElementById("prof-id-number"),
+        bio: document.getElementById("prof-bio"),
+        college: document.getElementById("prof-college"),
+        roomNo: document.getElementById("prof-room"),
+        faculty: document.getElementById("prof-faculty"),
+        office: document.getElementById("prof-office"),
+        shopName: document.getElementById("prof-shop-name"),
+        meetup: document.getElementById("prof-meetup"),
+        phone: document.getElementById("prof-phone"),
+        email: document.getElementById("prof-email")
+      };
+
+      const avatarPreview = document.getElementById("profile-avatar-preview");
+      const headerUsername = document.getElementById("profile-header-username");
+      const headerFullname = document.getElementById("profile-header-fullname");
+      const bioCounter = document.getElementById("bio-char-count");
+      let currentAvatarDataUrl = savedProfile.avatar || "";
+
+      function renderAvatar(name, dataUrl) {
+        if (dataUrl) {
+          avatarPreview.innerHTML = `<img src="${dataUrl}" alt="Profile" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        } else {
+          const initials = (name || "UM").trim().split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+          avatarPreview.textContent = initials || "UM";
+        }
+      }
+
+      // Isikan data sedia ada
+      roleSelect.value = savedProfile.role || "student";
+      fields.fullName.value = savedProfile.fullName || currentUser.name || "";
+      fields.username.value = savedProfile.username || (currentUser.name ? currentUser.name.toLowerCase().replace(/\s+/g, ".") : "");
+      fields.idNumber.value = savedProfile.idNumber || "";
+      fields.bio.value = savedProfile.bio || "";
+      fields.college.value = savedProfile.college || "";
+      fields.roomNo.value = savedProfile.roomNo || "";
+      fields.faculty.value = savedProfile.faculty || "";
+      fields.office.value = savedProfile.office || "";
+      fields.shopName.value = savedProfile.shopName || "";
+      fields.meetup.value = savedProfile.meetup || "";
+      fields.phone.value = savedProfile.phone || "";
+      fields.email.value = savedProfile.email || currentUser.email || "user@unimart.edu.my";
+
+      updateRoleFields(roleSelect.value);
+      headerFullname.textContent = fields.fullName.value || "Full Name";
+      headerUsername.textContent = fields.username.value ? "@" + fields.username.value.replace(/^@/, "") : "@unimart_user";
+      bioCounter.textContent = fields.bio.value.length;
+      renderAvatar(fields.fullName.value, currentAvatarDataUrl);
+
+      roleSelect.addEventListener("change", () => updateRoleFields(roleSelect.value));
+
+      fields.fullName.addEventListener("input", () => {
+        headerFullname.textContent = fields.fullName.value || "Full Name";
+        if (!currentAvatarDataUrl) renderAvatar(fields.fullName.value, "");
+      });
+
+      fields.username.addEventListener("input", () => {
+        const cleanUser = fields.username.value.replace(/^@/, "").trim();
+        headerUsername.textContent = cleanUser ? "@" + cleanUser : "@unimart_user";
+      });
+
+      fields.bio.addEventListener("input", () => {
+        bioCounter.textContent = fields.bio.value.length;
+      });
+
+      document.getElementById("profile-photo-input").addEventListener("change", function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (evt) {
+          currentAvatarDataUrl = evt.target.result;
+          renderAvatar(fields.fullName.value, currentAvatarDataUrl);
+        };
+        reader.readAsDataURL(file);
+      });
+
+      document.getElementById("user-profile-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const cleanUsername = fields.username.value.replace(/^@/, "").trim();
+
+        const profileData = {
+          role: roleSelect.value,
+          fullName: fields.fullName.value.trim(),
+          username: cleanUsername,
+          idNumber: fields.idNumber.value.trim(),
+          bio: fields.bio.value.trim(),
+          college: fields.college.value,
+          roomNo: fields.roomNo.value.trim(),
+          faculty: fields.faculty.value.trim(),
+          office: fields.office.value.trim(),
+          shopName: fields.shopName.value.trim(),
+          meetup: fields.meetup.value.trim(),
+          phone: fields.phone.value.trim(),
+          email: fields.email.value.trim(),
+          avatar: currentAvatarDataUrl
+        };
+
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(profileData));
+        // Kemas kini terus nama pada butang topnav (.user-pill-name)
+        const pillNameEl = document.querySelector("#user-menu-btn .user-pill-name");
+        const pillBtnEl = document.getElementById("user-menu-btn");
+        if (pillNameEl && cleanUsername) pillNameEl.textContent = cleanUsername;
+        if (pillBtnEl && cleanUsername) pillBtnEl.title = cleanUsername;
+
+if (typeof STORE !== "undefined" && STORE.user) {
+          const sessionUser = JSON.parse(localStorage.getItem(STORE.user) || "{}");
+          // Gunakan username jika diisi, jika kosong guna fullName
+          sessionUser.name = profileData.username || profileData.fullName;
+          sessionUser.fullName = profileData.fullName;
+          sessionUser.username = profileData.username;
+          sessionUser.avatar = profileData.avatar;
+          localStorage.setItem(STORE.user, JSON.stringify(sessionUser));
+
+          // Kemas kini juga dalam senarai akaun berdaftar (STORE.users) jika ada
+          if (STORE.users) {
+            const allUsers = JSON.parse(localStorage.getItem(STORE.users) || "[]");
+            const uIdx = allUsers.findIndex(u => u.id === sessionUser.id || u.email === sessionUser.email);
+            if (uIdx !== -1) {
+              allUsers[uIdx].name = sessionUser.name;
+              allUsers[uIdx].username = sessionUser.username;
+              allUsers[uIdx].avatar = sessionUser.avatar;
+              localStorage.setItem(STORE.users, JSON.stringify(allUsers));
+            }
+          }
+        }
+
+        // Lukis semula topnav (#app-header) secara langsung supaya username baru terus keluar
+        if (typeof renderShell === "function") {
+          renderShell();
+        } else {
+          const displayName = profileData.username || profileData.fullName;
+          const topnavName = document.querySelector("#app-header .user-chip span:last-child, #app-header .profile-name");
+          if (topnavName && displayName) topnavName.textContent = displayName;
+        }      });
+    });
+  </script>
+</body>
+</html>

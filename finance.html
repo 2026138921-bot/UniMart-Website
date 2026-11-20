@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finance &amp; Earnings | UniMart Seller</title>
+    <link rel="icon" type="image/png" href="image/logo.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .fin-kpi {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      height: 100%;
+    }
+    .fin-pill-in { background: #e6f7ee; color: #238452; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; }
+    .fin-pill-out { background: #fee2e2; color: #dc2626; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; }
+    .fin-sort-th:hover { background-color: rgba(111, 66, 193, 0.08) !important; color: #6f42c1; }
+  </style>
+</head>
+<body data-page="seller-finance">
+  <div id="app-header"></div>
+  <div class="app-shell">
+    <aside id="app-sidebar"></aside>
+    <main class="main-content">
+      <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div class="page-heading mb-0">
+          <span class="eyebrow">SELLER CENTRE</span>
+          <h1>Finance &amp; Shop Earnings</h1>
+          <p class="mb-0">Your shop revenue summary, platform service fee deduction, and payout ledger.</p>
+        </div>
+        <button class="btn btn-primary btn-sm fw-semibold" id="btn-download-ledger" style="width: auto; height: auto; margin: 0 0 0 auto; padding: 8px 18px;">Download Ledger (CSV)</button>
+      </div>
+
+      <div id="fin-content">
+        <div class="row g-3 mb-4">
+          <div class="col-12 col-md-4">
+            <div class="fin-kpi" style="border-left: 4px solid #7046c8;">
+              <div class="small fw-bold text-uppercase text-muted">Gross Shop Sales</div>
+              <h2 class="fw-bold my-1" id="fin-gross">RM 0.00</h2>
+              <div class="small text-success fw-semibold">All verified student orders</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="fin-kpi" style="border-left: 4px solid #10b981;">
+              <div class="small fw-bold text-uppercase text-muted">Platform Service Fee (5%)</div>
+              <h2 class="fw-bold my-1" id="fin-fee">RM 0.00</h2>
+              <div class="small text-muted">Marketplace operational fee</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <div class="fin-kpi" style="border-left: 4px solid #f59e0b;">
+              <div class="small fw-bold text-uppercase text-muted">Pending Payout Balance</div>
+              <h2 class="fw-bold my-1" id="fin-pending">RM 0.00</h2>
+              <div class="small text-muted">Scheduled for weekly release</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-card mt-4">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+              <h5 class="fw-bold mb-0">Financial Transactions &amp; Payouts</h5>
+              <small class="text-muted">Click column headers to sort. Click View for full financial breakdown.</small>
+            </div>
+
+            <!-- Filter & Search Controls -->
+            <div class="d-flex flex-wrap gap-2">
+              <select id="fin-type-filter" class="form-select form-select-sm" style="width: auto; min-width: 145px;">
+                <option value="all">All Types</option>
+                <option value="Income">Income (+)</option>
+                <option value="Payout">Payout / Out (-)</option>
+              </select>
+              <input type="text" id="fin-search-input" class="form-control form-control-sm" style="width: 220px;" placeholder="Search ID or description...">
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0" id="finance-table">
+<thead class="table-light">
+  <tr>
+    <th class="fin-sort-th" data-sort="desc" style="cursor:pointer;">
+      <div class="d-flex justify-content-between align-items-center">
+        <span>Transaction / Reference</span>
+        <span class="sort-icon text-muted ms-2">↕</span>
+      </div>
+    </th>
+    <th class="fin-sort-th" data-sort="dateVal" style="cursor:pointer;">
+      <div class="d-flex justify-content-between align-items-center">
+        <span>Date</span>
+        <span class="sort-icon text-muted ms-2">↕</span>
+      </div>
+    </th>
+    <th class="fin-sort-th" data-sort="signedAmount" style="cursor:pointer;">
+      <div class="d-flex justify-content-between align-items-center">
+        <span>Amount (RM)</span>
+        <span class="sort-icon text-muted ms-2">↕</span>
+      </div>
+    </th>
+    <th class="text-end">Actions</th>
+  </tr>
+</thead>              <tbody id="finance-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pop-out Modal: Full Finance Details (View) -->
+      <div id="fin-detail-modal" style="display:none; position:fixed; inset:0; background:rgba(18,12,38,0.58); backdrop-filter:blur(3px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:var(--surface, #fff); color:var(--ink, #1f1b2e); border:1px solid var(--line, #e5defa); border-radius:18px; width:100%; max-width:520px; max-height:90vh; overflow-y:auto; padding:22px; box-shadow:0 20px 45px rgba(0,0,0,0.25);">
+          <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+            <h5 class="fw-bold mb-0" id="fin-modal-title">Transaction Details</h5>
+            <button type="button" class="btn-close" id="fin-modal-close" aria-label="Close"></button>
+          </div>
+          <div id="fin-modal-body"></div>
+        </div>
+      </div>
+
+      <div id="app-footer"></div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const FIN_STORAGE_KEY = "unimart_fin_ledger_v1";
+
+      const defaultLedger = [
+        {
+          ref: "TXN-901",
+          date: "15 Nov 2026",
+          desc: "Order #ORD-202601 · Nurul Aina",
+          method: "DuitNow QR",
+          type: "Income",
+          amount: 18.00,
+          status: "Cleared",
+          accountInfo: "Buyer: Nurul Aina (UiTM Puncak Perdana)",
+          notes: "Instant DuitNow QR payment verified and credited to shop earnings."
+        },
+        {
+          ref: "TXN-902",
+          date: "15 Nov 2026",
+          desc: "Order #ORD-202602 · Muhammad Hakim",
+          method: "FPX Online",
+          type: "Income",
+          amount: 16.50,
+          status: "Cleared",
+          accountInfo: "Buyer: Muhammad Hakim (UiTM Shah Alam)",
+          notes: "FPX Online Banking payment settled successfully."
+        },
+        {
+          ref: "TXN-903",
+          date: "14 Nov 2026",
+          desc: "Weekly Shop Payout Withdrawal",
+          method: "Bank Transfer",
+          type: "Payout",
+          amount: 42.00,
+          status: "Completed",
+          accountInfo: "Maybank **** 4821 (Registered Seller Bank)",
+          notes: "Scheduled weekly shop payout transferred to seller bank account."
+        },
+        {
+          ref: "TXN-904",
+          date: "14 Nov 2026",
+          desc: "Order #ORD-202603 · Siti Sarah",
+          method: "E-Wallet",
+          type: "Income",
+          amount: 10.00,
+          status: "Pending",
+          accountInfo: "Buyer: Siti Sarah (UiTM Puncak Alam)",
+          notes: "Held in escrow until student confirms order delivery."
+        },
+        {
+          ref: "TXN-905",
+          date: "13 Nov 2026",
+          desc: "Campus Event Booth Collection",
+          method: "DuitNow QR",
+          type: "Income",
+          amount: 125.00,
+          status: "Cleared",
+          accountInfo: "UniMart Campus Bazaar Booth #04",
+          notes: "Direct student QR collection during campus entrepreneurship week."
+        }
+      ];
+
+      if (!localStorage.getItem(FIN_STORAGE_KEY)) {
+        localStorage.setItem(FIN_STORAGE_KEY, JSON.stringify(defaultLedger));
+      }
+
+      let sortConfig = { key: "dateVal", dir: "desc" };
+      let currentFilteredList = [];
+
+      const tbody = document.getElementById("finance-tbody");
+      const typeFilterEl = document.getElementById("fin-type-filter");
+      const searchInputEl = document.getElementById("fin-search-input");
+      const modal = document.getElementById("fin-detail-modal");
+      const modalTitle = document.getElementById("fin-modal-title");
+      const modalBody = document.getElementById("fin-modal-body");
+
+      function formatRM(val) {
+        return typeof money === "function" ? money(val) : "RM " + Number(val || 0).toFixed(2);
+      }
+
+      function safeText(str) {
+        return typeof escapeHTML === "function" ? escapeHTML(str) : String(str ?? "");
+      }
+
+      function getLedger() {
+        return JSON.parse(localStorage.getItem(FIN_STORAGE_KEY) || "[]").map(row => ({
+          ...row,
+          dateVal: Date.parse(row.date) || 0,
+          signedAmount: row.type === "Payout" ? -Number(row.amount || 0) : Number(row.amount || 0)
+        }));
+      }
+
+      function renderFinance() {
+        const allRows = getLedger();
+
+        // Kemas kini KPI cards
+        const gross = allRows.filter(x => x.type === "Income").reduce((s, x) => s + Number(x.amount), 0);
+        const fee = gross * 0.05;
+        const pending = allRows.filter(x => x.status === "Pending").reduce((s, x) => s + Number(x.amount), 0);
+
+        document.getElementById("fin-gross").textContent = formatRM(gross);
+        document.getElementById("fin-fee").textContent = formatRM(fee);
+        document.getElementById("fin-pending").textContent = formatRM(pending);
+
+        // Filter & Search
+        const selectedType = typeFilterEl ? typeFilterEl.value : "all";
+        const query = (searchInputEl?.value || "").trim().toLowerCase();
+
+        currentFilteredList = allRows
+          .filter(row => {
+            const matchType = selectedType === "all" || row.type === selectedType;
+            const matchSearch =
+              row.ref.toLowerCase().includes(query) ||
+              row.desc.toLowerCase().includes(query) ||
+              row.date.toLowerCase().includes(query);
+            return matchType && matchSearch;
+          })
+          .sort((a, b) => {
+            const valA = a[sortConfig.key];
+            const valB = b[sortConfig.key];
+            if (typeof valA === "string") {
+              return sortConfig.dir === "asc"
+                ? valA.localeCompare(valB)
+                : valB.localeCompare(valA);
+            }
+            return sortConfig.dir === "asc" ? valA - valB : valB - valA;
+          });
+
+        // Kemas kini panah sorting
+        document.querySelectorAll(".fin-sort-th").forEach(th => {
+          const icon = th.querySelector(".sort-icon");
+          if (!icon) return;
+          if (th.dataset.sort === sortConfig.key) {
+            icon.textContent = sortConfig.dir === "asc" ? "↑" : "↓";
+            icon.classList.remove("text-muted");
+          } else {
+            icon.textContent = "↕";
+            icon.classList.add("text-muted");
+          }
+        });
+
+        if (!currentFilteredList.length) {
+          tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-4">No financial records found.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = currentFilteredList.map(row => {
+          const isPayout = row.type === "Payout";
+          const amountColor = isPayout ? "text-danger" : "text-success";
+          const sign = isPayout ? "-" : "+";
+
+          return `
+            <tr>
+              <td>
+                <div class="fw-semibold">${safeText(row.desc)}</div>
+                <small class="text-muted">${safeText(row.ref)}</small>
+              </td>
+              <td class="small-muted">${safeText(row.date)}</td>
+              <td class="fw-bold ${amountColor}">${sign}${formatRM(row.amount)}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-1">
+                  <button type="button" class="btn btn-sm btn-outline-primary btn-fin-view" data-ref="${safeText(row.ref)}">View</button>
+                  <button type="button" class="btn btn-sm btn-outline-danger btn-fin-del" data-ref="${safeText(row.ref)}">Delete</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      // Sorting pada setiap column header
+      document.querySelectorAll(".fin-sort-th").forEach(th => {
+        th.addEventListener("click", () => {
+          const key = th.dataset.sort;
+          if (sortConfig.key === key) {
+            sortConfig.dir = sortConfig.dir === "asc" ? "desc" : "asc";
+          } else {
+            sortConfig.key = key;
+            sortConfig.dir = "asc";
+          }
+          renderFinance();
+        });
+      });
+
+      // Filter & Search listeners
+      typeFilterEl?.addEventListener("change", renderFinance);
+      searchInputEl?.addEventListener("input", renderFinance);
+
+      // Pop-out VIEW (Type, Status, Method & Semua Info Kewangan)
+      function openFinanceView(ref) {
+        const row = getLedger().find(x => x.ref === ref);
+        if (!row || !modal) return;
+
+        const isPayout = row.type === "Payout";
+        const amountColor = isPayout ? "text-danger" : "text-success";
+        const sign = isPayout ? "-" : "+";
+        const feeAmt = isPayout ? 0 : Number(row.amount) * 0.05;
+        const netAmt = isPayout ? Number(row.amount) : Number(row.amount) - feeAmt;
+
+        const typeBadge = isPayout
+          ? `<span class="fin-pill-out">Payout (Money Out)</span>`
+          : `<span class="fin-pill-in">Income (Money In)</span>`;
+
+        const statusBadge = row.status === "Pending"
+          ? `<span class="badge bg-warning text-dark">${safeText(row.status)}</span>`
+          : `<span class="badge bg-success">${safeText(row.status)}</span>`;
+
+        modalTitle.textContent = `Transaction Details · ${row.ref}`;
+        modalBody.innerHTML = `
+          <div class="p-3 rounded border bg-light mb-3 d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small text-muted">Transaction Amount</div>
+              <div class="fw-bold fs-4 ${amountColor}">${sign}${formatRM(row.amount)}</div>
+            </div>
+            <div class="text-end d-flex flex-column align-items-end gap-1">
+              ${typeBadge}
+              ${statusBadge}
+            </div>
+          </div>
+
+          <h6 class="fw-bold small text-uppercase text-muted mb-2">Complete Finance &amp; Settlement Breakdown</h6>
+          <table class="table table-sm table-bordered mb-3">
+            <tbody>
+              <tr><th class="bg-light" style="width:42%;">Reference ID</th><td><b>${safeText(row.ref)}</b></td></tr>
+              <tr><th class="bg-light">Date</th><td>${safeText(row.date)}</td></tr>
+              <tr><th class="bg-light">Description</th><td>${safeText(row.desc)}</td></tr>
+              <tr><th class="bg-light">Type</th><td>${safeText(row.type)} (${isPayout ? "Outflow" : "Inflow"})</td></tr>
+              <tr><th class="bg-light">Status</th><td>${safeText(row.status)}</td></tr>
+              <tr><th class="bg-light">Payment / Transfer Method</th><td>${safeText(row.method)}</td></tr>
+              <tr><th class="bg-light">Gross Amount</th><td>${formatRM(row.amount)}</td></tr>
+              <tr><th class="bg-light">Platform Fee (5%)</th><td>${isPayout ? "RM 0.00" : formatRM(feeAmt)}</td></tr>
+              <tr><th class="bg-light">Net Settlement</th><td class="fw-bold ${amountColor}">${sign}${formatRM(netAmt)}</td></tr>
+              <tr><th class="bg-light">Party / Account</th><td>${safeText(row.accountInfo || "-")}</td></tr>
+            </tbody>
+          </table>
+
+          <div class="mb-3">
+            <div class="small fw-bold text-muted mb-1">Remarks / Notes</div>
+            <div class="p-2 rounded border bg-light small">${safeText(row.notes || "Verified UniMart ledger record.")}</div>
+          </div>
+
+          <div class="text-end">
+            <button type="button" class="btn btn-secondary btn-sm" id="fin-modal-done">Close</button>
+          </div>
+        `;
+
+        modal.style.display = "flex";
+        document.getElementById("fin-modal-done")?.addEventListener("click", () => modal.style.display = "none");
+      }
+
+      // View & Delete event delegation
+      tbody.addEventListener("click", e => {
+        const viewBtn = e.target.closest(".btn-fin-view");
+        const delBtn = e.target.closest(".btn-fin-del");
+
+        if (viewBtn) {
+          openFinanceView(viewBtn.dataset.ref);
+        } else if (delBtn) {
+          const ref = delBtn.dataset.ref;
+          if (confirm(`Are you sure you want to delete transaction ${ref}?`)) {
+            const updated = JSON.parse(localStorage.getItem(FIN_STORAGE_KEY) || "[]").filter(x => x.ref !== ref);
+            localStorage.setItem(FIN_STORAGE_KEY, JSON.stringify(updated));
+            renderFinance();
+            if (typeof toast === "function") toast(`Transaction ${ref} deleted.`);
+          }
+        }
+      });
+
+      document.getElementById("fin-modal-close")?.addEventListener("click", () => modal.style.display = "none");
+      modal?.addEventListener("click", e => {
+        if (e.target === modal) modal.style.display = "none";
+      });
+
+      renderFinance();
+
+      // Export CSV
+      document.getElementById("btn-download-ledger").addEventListener("click", () => {
+        const csv = [
+          ["Ref", "Date", "Description", "Method", "Type", "Amount", "Status"],
+          ...currentFilteredList.map(r => [
+            r.ref,
+            `"${r.date}"`,
+            `"${r.desc.replace(/"/g, '""')}"`,
+            r.method,
+            r.type,
+            (r.type === "Payout" ? "-" : "+") + Number(r.amount).toFixed(2),
+            r.status
+          ])
+        ].map(e => e.join(",")).join("\n");
+
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+        a.download = "unimart_shop_ledger.csv";
+        a.click();
+      });
+    });
+  </script>
+</body>
+</html>

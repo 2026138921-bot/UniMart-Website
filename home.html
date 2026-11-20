@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UniMart | Student Marketplace</title>
+  <link rel="icon" type="image/png" href="image/logo.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- INTERNAL CSS KHUSUS UNTUK HOME BENTO GRID (BRIGHT & DARK MODE) -->
+  <style>
+    .bento-card {
+      background: var(--surface, #ffffff);
+      border: 1px solid var(--line, #e6defa);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 10px 28px rgba(45, 22, 99, 0.05);
+      color: var(--ink, #1f1b2e);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .bento-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 36px rgba(74, 37, 116, 0.12);
+    }
+
+    .bento-main-hero {
+      padding: 28px 30px;
+      background: linear-gradient(135deg, #ffffff 0%, #f6f2ff 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bento-pill-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      border: 1px solid var(--line, #e5defa);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--purple, #6d28d9);
+    }
+
+    .bento-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #7c3aed;
+    }
+
+    .bento-hero-title {
+      font-family: 'Manrope', sans-serif;
+      font-weight: 800;
+      font-size: clamp(26px, 2.8vw, 38px);
+      line-height: 1.15;
+      letter-spacing: -1px;
+    }
+
+    .bento-hero-title span {
+      color: var(--purple, #6d28d9);
+    }
+
+    .bento-outline-num {
+      font-family: 'Manrope', sans-serif;
+      font-size: 32px;
+      font-weight: 800;
+      color: transparent;
+      -webkit-text-stroke: 1.5px #a78bfa;
+      line-height: 1;
+    }
+
+    .bento-line {
+      width: 42px;
+      height: 1.5px;
+      background: #c4b5fd;
+      flex-shrink: 0;
+    }
+
+    .bento-cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: #c8f169;
+      color: #18181b !important;
+      font-weight: 800;
+      font-size: 13.5px;
+      padding: 6px 6px 6px 18px;
+      border-radius: 999px;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .bento-cta-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px rgba(200, 241, 105, 0.45);
+    }
+
+    .bento-cta-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #18181b;
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      font-size: 14px;
+    }
+
+    .bento-secondary-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--line, #dcd0f7);
+      background: var(--surface, #ffffff);
+      color: var(--ink, #1f1b2e);
+      font-weight: 700;
+      font-size: 13px;
+      text-decoration: none;
+    }
+
+    .bento-social-chip {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--purple-soft, #f1ebff);
+      color: var(--purple, #6d28d9);
+      display: inline-grid;
+      place-items: center;
+      font-size: 13px;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .bento-social-chip:hover {
+      background: var(--purple, #6d28d9);
+      color: #ffffff;
+    }
+
+    .bento-hero-visual {
+      position: relative;
+      display: inline-block;
+      padding: 12px;
+    }
+
+    .bento-hero-img {
+      width: 215px;
+      height: 215px;
+      object-fit: cover;
+      border-radius: 28px;
+      box-shadow: 0 18px 38px rgba(76, 29, 149, 0.22);
+      position: relative;
+      z-index: 2;
+    }
+
+    .bento-orb {
+      position: absolute;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #a78bfa, #6d28d9);
+      z-index: 1;
+    }
+
+    .bento-orb.orb-1 {
+      width: 26px;
+      height: 26px;
+      top: 4px;
+      left: 4px;
+    }
+
+    .bento-orb.orb-2 {
+      width: 18px;
+      height: 18px;
+      bottom: 10px;
+      right: 6px;
+    }
+
+    .bento-float-badge {
+      position: absolute;
+      z-index: 3;
+      background: #ffffff;
+      color: #1f1b2e;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 999px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .bento-float-badge.top-badge {
+      top: 16px;
+      right: -6px;
+    }
+
+    .bento-float-badge.bottom-badge {
+      bottom: 16px;
+      left: -10px;
+    }
+
+    .bento-mini-card {
+      padding: 16px;
+    }
+
+    .bento-thumb-img {
+      width: 31%;
+      height: 62px;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+
+    .bento-heart-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #fee2e2;
+      color: #ef4444;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+    }
+
+    .bento-avatar-stack {
+      display: flex;
+      justify-content: center;
+    }
+
+    .bento-avatar-stack span {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      border: 2px solid #fff;
+      margin-left: -6px;
+    }
+
+    .bento-avatar-stack span:first-child {
+      margin-left: 0;
+    }
+
+    .bento-purple-pill {
+      background: linear-gradient(135deg, #6d28d9, #4c1d95);
+      color: #ffffff;
+      border-radius: 16px;
+      padding: 10px 8px;
+    }
+
+    .bento-fire-tag {
+      font-size: 11px;
+      font-weight: 700;
+      background: #fff7ed;
+      color: #ea580c;
+      padding: 4px 10px;
+      border-radius: 999px;
+    }
+
+    .bento-arrow-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--line, #e5defa);
+      display: inline-grid;
+      place-items: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink, #1f1b2e);
+    }
+
+    .bento-cat-dot {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      text-decoration: none;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+      transition: transform 0.2s;
+    }
+
+    .bento-cat-dot:hover {
+      transform: scale(1.12);
+    }
+
+    .bento-side-thumb {
+      width: 105px;
+      height: 95px;
+      object-fit: cover;
+      border-radius: 16px;
+      flex-shrink: 0;
+    }
+
+    .bento-tall-card {
+      min-height: 220px;
+      padding: 18px;
+    }
+
+    .bento-tall-bg-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+
+    .bento-tall-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(15, 10, 32, 0.15) 0%, rgba(15, 10, 32, 0.82) 100%);
+      z-index: 1;
+    }
+
+    /* Dark Mode Support */
+    body.dark .bento-main-hero {
+      background: linear-gradient(135deg, #1d1536 0%, #2a1d4d 100%);
+    }
+
+    body.dark .bento-pill-tag,
+    body.dark .bento-secondary-btn,
+    body.dark .bento-float-badge {
+      background: #251c42;
+      color: #ffffff;
+      border-color: rgba(167, 139, 250, 0.25);
+    }
+
+    body.dark .bento-arrow-btn {
+      border-color: rgba(167, 139, 250, 0.25);
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body data-page="dashboard">
+  <div id="app-header"></div>
+  <div class="app-shell">
+    <aside id="app-sidebar"></aside>
+    <main class="main-content">
+
+      <!-- HERO BENTO GRID -->
+      <section class="bento-hero-section mb-4">
+        <div class="row g-3 align-items-stretch">
+
+          <!-- LAJUR KIRI (8/12): HERO UTAMA + 3 KAD MINI BAWAH -->
+          <div class="col-12 col-xl-8 d-flex flex-column gap-3">
+
+            <!-- KAD HERO UTAMA -->
+            <div class="bento-card bento-main-hero flex-grow-1">
+              <div class="row align-items-center g-4 h-100">
+                <div class="col-12 col-md-7 d-flex flex-column justify-content-between h-100">
+                  <div>
+                    <span class="bento-pill-tag">
+                      <span class="bento-dot"></span> Campus Marketplace
+                    </span>
+
+                    <h1 class="bento-hero-title mt-3 mb-3">
+                      Everything Students Need,<br><span>All In One Place.</span>
+                    </h1>
+
+                    <div class="bento-sub-row d-flex align-items-center gap-3 mb-4">
+                      <span class="bento-outline-num">01</span>
+                      <div class="bento-line"></div>
+                      <div>
+                        <strong class="d-block small">Student Essentials &amp; Deals</strong>
+                        <span class="small text-muted">Buy, sell &amp; book campus services easily.</span>
+                      </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                      <a href="products.html" class="bento-cta-btn">
+                        <span>View All Products</span>
+                        <span class="bento-cta-circle">↗</span>
+                      </a>
+                      <a href="services.html" class="bento-secondary-btn">Browse Services</a>
+                    </div>
+                  </div>
+
+                  <div class="d-flex align-items-center gap-2 mt-4 pt-2">
+                    <span class="small fw-semibold text-muted me-1">Quick Explore:</span>
+                    <a href="products.html" class="bento-social-chip" title="Products">▦</a>
+                    <a href="services.html" class="bento-social-chip" title="Services">✧</a>
+                    <a href="preloved.html" class="bento-social-chip" title="Preloved">♡</a>
+                    <a href="sellerform.html" class="bento-social-chip" title="Seller Centre">♧</a>
+                  </div>
+                </div>
+
+                <!-- VISUAL PRODUK / KAMPUS KANAN -->
+                <div class="col-12 col-md-5 text-center position-relative">
+                  <div class="bento-hero-visual">
+                    <div class="bento-orb orb-1"></div>
+                    <div class="bento-orb orb-2"></div>
+                    <img src="image/cookies.jpg" alt="Featured Campus Item" class="bento-hero-img">
+                    <span class="bento-float-badge top-badge">✦ Best Seller</span>
+                    <span class="bento-float-badge bottom-badge">RM 8.00 · Campus COD</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BARIS BAWAH KIRI: 3 KAD MINI BENTO -->
+            <div class="row g-3">
+              <!-- Kad Bawah 1: More Products -->
+              <div class="col-12 col-md-5">
+                <a href="products.html" class="bento-card bento-mini-card text-decoration-none d-flex flex-column justify-content-between h-100">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                      <h6 class="fw-bold mb-0">More Products</h6>
+                      <small class="text-muted"><span id="stat-products">75%</span> active catalog</small>
+                    </div>
+                    <span class="bento-heart-badge">♥</span>
+                  </div>
+                  <div class="d-flex gap-2 mt-2">
+                    <img src="image/ramencup.jpg" alt="Ramen" class="bento-thumb-img">
+                    <img src="image/bag.jpg" alt="Tote Bag" class="bento-thumb-img">
+                    <img src="image/calculator.jpg" alt="Calculator" class="bento-thumb-img">
+                  </div>
+                </a>
+              </div>
+
+              <!-- Kad Bawah 2: Active Students & Rating -->
+              <div class="col-6 col-md-3">
+                <div class="bento-card bento-mini-card text-center d-flex flex-column justify-content-between align-items-center h-100">
+                  <div class="bento-avatar-stack">
+                    <span>A</span><span>N</span><span>H</span>
+                  </div>
+                  <div class="bento-purple-pill my-2 w-100">
+                    <div class="fw-bold fs-5 lh-1" id="stat-total-users">1,284+</div>
+                    <div style="font-size: 10.5px; opacity: 0.9;">Active Students</div>
+                  </div>
+                  <div class="small fw-semibold">⭐ 4.9 <span class="text-muted">Reviews</span></div>
+                </div>
+              </div>
+
+              <!-- Kad Bawah 3: Popular Services -->
+              <div class="col-6 col-md-4">
+                <a href="services.html" class="bento-card bento-mini-card text-decoration-none d-flex flex-column justify-content-between h-100 position-relative overflow-hidden">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="bento-fire-tag">🔥 Popular</span>
+                    <span class="bento-arrow-btn">↗</span>
+                  </div>
+                  <div class="my-2">
+                    <h6 class="fw-bold mb-1">Campus Services</h6>
+                    <small class="text-muted d-block"><span id="stat-services">35%</span> Printing &amp; Runner</small>
+                  </div>
+                  <div class="d-flex align-items-center justify-content-between">
+                    <span class="badge bg-light text-dark border">⭐ 4.8</span>
+                    <span class="small fw-bold" style="color: var(--purple);">Explore →</span>
+                  </div>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- LAJUR KANAN (4/12): 3 KAD SOROTAN BERTINGKAT -->
+          <div class="col-12 col-xl-4 d-flex flex-column gap-3">
+
+            <!-- Kad Kanan 1: Top Categories -->
+            <div class="bento-card bento-side-card">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0">Top Categories</h6>
+                <span class="small text-muted">24/7 Access</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center gap-2 pt-1">
+                <a href="products.html" class="bento-cat-dot" style="background:#c9a8ff;" title="Food & Drink">🍔</a>
+                <a href="products.html" class="bento-cat-dot" style="background:#ffd4b6;" title="Books">📚</a>
+                <a href="services.html" class="bento-cat-dot" style="background:#b4ffe6;" title="Printing">🖨️</a>
+                <a href="services.html" class="bento-cat-dot" style="background:#c8e09a;" title="Runner">🛵</a>
+                <a href="preloved.html" class="bento-cat-dot" style="background:#98f0ff;" title="Preloved">🎒</a>
+              </div>
+            </div>
+
+            <!-- Kad Kanan 2: Featured Service Card -->
+            <a href="services.html" class="bento-card bento-side-card text-decoration-none d-flex align-items-center justify-content-between gap-3">
+              <div class="d-flex flex-column justify-content-between h-100">
+                <div>
+                  <h6 class="fw-bold mb-1">Express Printing<br>&amp; Runner</h6>
+                  <small class="text-muted">From RM 0.30/page</small>
+                </div>
+                <span class="bento-arrow-btn mt-3">↗</span>
+              </div>
+              <img src="image/printing.jpg" alt="Printing Service" class="bento-side-thumb">
+            </a>
+
+            <!-- Kad Kanan 3: Tall Preloved Highlight Card -->
+            <a href="preloved.html" class="bento-card bento-tall-card text-decoration-none flex-grow-1 d-flex flex-column justify-content-between position-relative overflow-hidden">
+              <div class="d-flex justify-content-between align-items-start position-relative" style="z-index: 2;">
+                <span class="badge bg-white text-dark shadow-sm px-2 py-1">Preloved · <span id="stat-preloved">20%</span></span>
+                <span class="bento-arrow-btn bg-white text-dark">↗</span>
+              </div>
+              <img src="image/jacket.jpg" alt="Preloved Finds" class="bento-tall-bg-img">
+              <div class="bento-tall-overlay position-relative" style="z-index: 2;">
+                <h5 class="fw-bold text-white mb-0">Preloved Campus Finds</h5>
+                <small class="text-white-50">Save up to 60% on textbooks &amp; gear</small>
+              </div>
+            </a>
+
+          </div>
+        </div>
+      </section>
+
+      <div id="app-footer"></div>
+    </main>
+  </div>
+  <script src="js/app.js"></script>
+</body>
+</html>

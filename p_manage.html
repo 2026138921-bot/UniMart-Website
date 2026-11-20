@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product Management | UniMart Seller</title>
+  <link rel="icon" type="image/png" href="image/logo.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="product_manage">
+  <div id="app-header"></div>
+  <div class="app-shell">
+    <aside id="app-sidebar"></aside>
+    <main class="main-content">
+      <div class="page-heading">
+        <span class="eyebrow">SELLER CENTRE</span>
+        <h1>Product Management</h1>
+        <p>Add new listings, update prices or options, and manage your shop inventory.</p>
+      </div>
+
+      <div class="content-card mb-4">
+        <div class="section-heading">
+          <div>
+            <h2 id="listing-form-title">Add a listing</h2>
+            <p class="small-muted">Fields marked * are required. Set availability and stock accurately.</p>
+          </div>
+        </div>
+        <form id="listing-form">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Listing title *</label>
+              <input class="form-control" id="listing-title" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Listing type *</label>
+              <select class="form-select" id="listing-type">
+                <option value="product">Product</option>
+                <option value="service">Service</option>
+                <option value="preloved">Preloved</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Category *</label>
+              <select class="form-select" id="listing-category"></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Options / Variants (Optional)</label>
+              <input type="text" id="listing-options" class="form-control" placeholder="e.g. Original: 8.00, Double Chips: 9.00">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Service Unit (Optional)</label>
+              <input type="text" id="listing-unit" class="form-control" placeholder="e.g. page, hour, trip, load (default: service)">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Description *</label>
+              <textarea class="form-control" id="listing-description" rows="3" required></textarea>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Price (RM) *</label>
+              <input class="form-control" id="listing-price" type="number" min="0" step=".01" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Quantity</label>
+              <input class="form-control" id="listing-quantity" type="number" min="0" value="1">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Availability</label>
+              <select class="form-select" id="listing-status">
+                <option value="open">Open / Available</option>
+                <option value="closed">Closed / Unavailable</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Contact phone *</label>
+              <input class="form-control" id="listing-phone" required placeholder="0123456789">
+            </div>
+
+            <!-- INPUT GAMBAR + PRATONTON -->
+            <div class="col-12">
+              <label class="form-label">Product / Service Image</label>
+              <div class="d-flex align-items-center gap-3 flex-wrap">
+                <input type="file" id="listing-image" class="form-control" accept="image/*" style="max-width: 360px;">
+                <img id="listing-image-preview" src="" alt="Preview" style="display: none; width: 64px; height: 64px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(124,58,237,0.3);">
+              </div>
+            </div>
+
+            <div class="col-12">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="listing-rules" required>
+                <label class="form-check-label" for="listing-rules">I confirm this listing is accurate, lawful and follows UniMart community rules.</label>
+              </div>
+            </div>
+          </div>
+          <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-primary" type="submit" id="save-listing-button" style="width: auto; padding: 0 22px;">Publish listing</button>
+            <button class="btn btn-outline-secondary d-none" type="button" id="cancel-edit">Cancel edit</button>
+          </div>
+          <div id="listing-feedback" class="small text-success fw-semibold mt-2"></div>
+        </form>
+      </div>
+
+      <!-- BAHAGIAN MY LISTINGS DENGAN SORTING -->
+      <div class="content-card mt-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+          <div>
+            <h2 class="h5 fw-bold mb-0">My Listings</h2>
+            <small class="text-muted">Manage your store items, pricing, and stock</small>
+          </div>
+
+          <!-- Dropdown Sorting -->
+          <div class="d-flex align-items-center gap-2">
+            <label for="my-listings-sort" class="small fw-semibold text-muted text-nowrap mb-0">Sort by:</label>
+            <select id="my-listings-sort" class="form-select form-select-sm" style="width: auto; border-radius: 10px;">
+              <option value="newest">Newest First</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="stock-asc">Stock: Low to High</option>
+              <option value="stock-desc">Stock: High to Low</option>
+              <option value="name-asc">Name: A – Z</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Senarai Item (Hanya papar Listing Price & Stock) -->
+        <div class="table-responsive">
+          <table class="table align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Listing</th>
+                <th>Listing Price</th>
+                <th>Stock</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="my-listings-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MODAL VIEW DETAIL INFORMATION -->
+      <div id="listing-detail-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 10, 32, 0.6); z-index: 9999; align-items: center; justify-content: center; padding: 16px;">
+        <div class="detail-modal-box" style="width: 100%; max-width: 480px; border-radius: 22px; padding: 24px; box-shadow: 0 24px 60px rgba(0,0,0,0.25);">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <span class="badge bg-primary-subtle text-primary mb-1" id="view-modal-type">Product</span>
+              <h4 class="fw-bold mb-0" id="view-modal-title">Item Title</h4>
+            </div>
+            <button type="button" class="btn-close" id="close-detail-modal" aria-label="Close"></button>
+          </div>
+
+          <img id="view-modal-img" src="" alt="" style="display: none; width: 100%; height: 180px; object-fit: cover; border-radius: 14px; margin-bottom: 14px;">
+
+          <div class="p-3 rounded-4 border mb-3 d-flex justify-content-between align-items-center">
+            <div>
+              <small class="text-muted d-block">Listing Price</small>
+              <strong class="fs-5 text-primary" id="view-modal-price">RM0.00</strong>
+            </div>
+            <div class="text-end">
+              <small class="text-muted d-block">Available Stock</small>
+              <strong class="fs-5" id="view-modal-stock">0 units</strong>
+            </div>
+          </div>
+
+          <div class="d-flex flex-column gap-2 small mb-4">
+            <div class="d-flex justify-content-between border-bottom pb-2">
+              <span class="text-muted">Category</span>
+              <strong id="view-modal-category">-</strong>
+            </div>
+            <div class="d-flex justify-content-between border-bottom pb-2">
+              <span class="text-muted">Status</span>
+              <strong id="view-modal-status">-</strong>
+            </div>
+            <div class="d-flex justify-content-between border-bottom pb-2">
+              <span class="text-muted">Contact / WhatsApp</span>
+              <strong id="view-modal-phone">-</strong>
+            </div>
+            <div class="pt-1">
+              <span class="text-muted d-block mb-1">Description</span>
+              <p class="mb-0 p-2 rounded-3 border" id="view-modal-desc" style="min-height: 60px; white-space: pre-line;">-</p>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2">
+            <button type="button" class="btn btn-secondary rounded-pill px-4" id="close-detail-modal-btn">Close</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="app-footer"></div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const tbody = document.getElementById("my-listings-body");
+      const sortSelect = document.getElementById("my-listings-sort");
+
+      const detailModal = document.getElementById("listing-detail-modal");
+      const detailBox = detailModal?.querySelector(".detail-modal-box");
+
+      let editingListingId = null;
+      let uploadedImageDataUrl = "";
+
+      const listingForm = document.getElementById("listing-form");
+      const formTitleEl = document.getElementById("listing-form-title");
+      const submitBtn = document.getElementById("save-listing-button");
+      const cancelEditBtn = document.getElementById("cancel-edit");
+      const imageInput = document.getElementById("listing-image");
+      const imagePreview = document.getElementById("listing-image-preview");
+
+      const LISTINGS_KEY = (typeof STORE !== "undefined" && STORE.listings) ? STORE.listings : "unimart_listings";
+
+      function readAllListings() {
+        try {
+          return JSON.parse(localStorage.getItem(LISTINGS_KEY) || "[]");
+        } catch {
+          return [];
+        }
+      }
+
+      function saveAllListings(arr) {
+        localStorage.setItem(LISTINGS_KEY, JSON.stringify(arr));
+      }
+
+      // Pemampat gambar ringan supaya muat dalam localStorage
+      function compressImageToDataUrl(file, maxWidth = 600, quality = 0.78) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              const canvas = document.createElement("canvas");
+              const scale = Math.min(1, maxWidth / img.width);
+              canvas.width = Math.round(img.width * scale);
+              canvas.height = Math.round(img.height * scale);
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              resolve(canvas.toDataURL("image/jpeg", quality));
+            };
+            img.onerror = () => resolve(e.target.result);
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // Kesan pilihan fail gambar
+      imageInput?.addEventListener("change", async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Processing image...";
+        }
+
+        uploadedImageDataUrl = await compressImageToDataUrl(file);
+
+        if (imagePreview) {
+          imagePreview.src = uploadedImageDataUrl;
+          imagePreview.style.display = "block";
+        }
+
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = editingListingId ? "Update listing" : "Publish listing";
+        }
+      });
+
+      function getSellerListings() {
+        const all = readAllListings();
+        const user = typeof current === "function" ? current() : null;
+
+        let myItems = all.filter(item =>
+          (user?.id && item.ownerId === user.id) ||
+          (user?.email && item.sellerEmail === user.email) ||
+          (user?.name && item.owner === user.name)
+        );
+
+        if (myItems.length === 0) {
+          const ownerId = user?.id || "seller-demo";
+          const ownerName = user?.name || "Campus Shop";
+          const sellerEmail = user?.email || "";
+
+          const starterItems = [
+            {
+              id: "l-seed-1",
+              image: "image/matcha.jpg",
+              img: "image/matcha.jpg",
+              title: "Iced Matcha Latte (16oz)",
+              type: "product",
+              category: "Food & Drinks",
+              description: "Freshly whisked Uji matcha with cold milk. Available for pickup at Kolej Melati or campus delivery.",
+              price: 8.50,
+              quantity: 15,
+              status: "open",
+              phone: "012-3456789",
+              owner: ownerName,
+              ownerId: ownerId,
+              sellerEmail: sellerEmail,
+              popular: true
+            },
+            {
+              id: "l-seed-2",
+              image: "image/printing.jpg",
+              img: "image/printing.jpg",
+              title: "A4 Color Printing & Binding",
+              type: "service",
+              category: "Printing & Design",
+              description: "Fast thesis, assignment, and slide printing (80gsm paper). Free comb binding for orders above 30 pages.",
+              price: 0.50,
+              quantity: 100,
+              status: "open",
+              phone: "012-3456789",
+              owner: ownerName,
+              ownerId: ownerId,
+              sellerEmail: sellerEmail,
+              popular: true
+            },
+            {
+              id: "l-seed-3",
+              image: "image/calculator.jpg",
+              img: "image/calculator.jpg",
+              title: "Casio Scientific Calculator fx-570EX",
+              type: "preloved",
+              category: "Electronics",
+              description: "Lightly used for 1 semester, 9.5/10 condition with original slide cover. COD around library.",
+              price: 45.00,
+              quantity: 2,
+              status: "open",
+              phone: "012-3456789",
+              owner: ownerName,
+              ownerId: ownerId,
+              sellerEmail: sellerEmail,
+              popular: false
+            },
+            {
+              id: "l-seed-4",
+              image: "image/fan.jpg",
+              img: "image/fan.jpg",
+              title: "Mini Portable Desk Fan (USB-C)",
+              type: "product",
+              category: "Gadgets & Accessories",
+              description: "Quiet 3-speed rechargeable fan suitable for hostel study desk. Includes charging cable.",
+              price: 18.00,
+              quantity: 7,
+              status: "open",
+              phone: "012-3456789",
+              owner: ownerName,
+              ownerId: ownerId,
+              sellerEmail: sellerEmail,
+              popular: false
+            }
+          ];
+
+          saveAllListings([...starterItems, ...all]);
+          myItems = starterItems;
+        }
+
+        return myItems;
+      }
+
+      function sortItems(items, mode) {
+        const copy = [...items];
+        switch (mode) {
+          case "price-asc":
+            return copy.sort((a, b) => Number(a.price || 0) - Number(b.price || 0));
+          case "price-desc":
+            return copy.sort((a, b) => Number(b.price || 0) - Number(a.price || 0));
+          case "stock-asc":
+            return copy.sort((a, b) => Number(a.quantity ?? a.stock ?? 0) - Number(b.quantity ?? b.stock ?? 0));
+          case "stock-desc":
+            return copy.sort((a, b) => Number(b.quantity ?? b.stock ?? 0) - Number(a.quantity ?? a.stock ?? 0));
+          case "name-asc":
+            return copy.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+          case "newest":
+          default:
+            return copy;
+        }
+      }
+
+      function renderMyListings() {
+        if (!tbody) return;
+        const sortMode = sortSelect ? sortSelect.value : "newest";
+        const myItems = sortItems(getSellerListings(), sortMode);
+
+        if (myItems.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4" class="text-center text-muted py-4">
+                No listings yet. Add your first product or service above!
+              </td>
+            </tr>`;
+          return;
+        }
+
+tbody.innerHTML = myItems.map(item => {
+          const price = Number(item.price || 0).toFixed(2);
+          const stock = Number(item.quantity ?? item.stock ?? 0);
+          const stockColor = stock <= 3 ? "text-danger fw-bold" : "fw-semibold";
+
+          return `
+            <tr>
+              <td class="fw-bold">${escapeHTML(item.title || "Untitled")}</td>
+              <td class="fw-semibold text-primary">RM${price}</td>
+              <td class="${stockColor}">${stock}</td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-1">
+                  <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 btn-view-listing" data-id="${item.id}">View</button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 btn-edit-listing" data-id="${item.id}">Edit</button>
+                  <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 btn-del-listing" data-id="${item.id}">Delete</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+      // MODAL VIEW
+// MODAL VIEW
+      function openDetailModal(itemId) {
+        const item = readAllListings().find(x => x.id === itemId);
+        if (!item || !detailModal) return;
+
+        if (detailBox) {
+          const isDark = document.body.classList.contains("dark");
+          detailBox.style.backgroundColor = isDark ? "#1d1536" : "#ffffff";
+          detailBox.style.color = isDark ? "#ffffff" : "#1f1b2e";
+        }
+
+        const modalImg = document.getElementById("view-modal-img");
+        const imgSrc = item.image || item.img || "";
+        if (modalImg) {
+          if (imgSrc) {
+            modalImg.src = imgSrc;
+            modalImg.style.display = "block";
+            modalImg.onerror = () => { modalImg.style.display = "none"; };
+          } else {
+            modalImg.style.display = "none";
+          }
+        }
+
+        document.getElementById("view-modal-type").textContent = (item.type || "Product").toUpperCase();
+        document.getElementById("view-modal-title").textContent = item.title || "Untitled";
+        document.getElementById("view-modal-price").textContent = "RM" + Number(item.price || 0).toFixed(2);
+        document.getElementById("view-modal-stock").textContent = (item.quantity ?? item.stock ?? 0) + " units";
+        document.getElementById("view-modal-category").textContent = item.category || "-";
+        document.getElementById("view-modal-status").textContent = (item.status === "closed") ? "Closed / Unavailable" : "Open / Available";
+        document.getElementById("view-modal-phone").textContent = item.phone || "-";
+        document.getElementById("view-modal-desc").textContent = item.description || "No description provided.";
+
+        detailModal.style.display = "flex";
+      }      function closeDetailModal() {
+        if (detailModal) detailModal.style.display = "none";
+      }
+
+      document.getElementById("close-detail-modal")?.addEventListener("click", closeDetailModal);
+      document.getElementById("close-detail-modal-btn")?.addEventListener("click", closeDetailModal);
+      detailModal?.addEventListener("click", (e) => {
+        if (e.target === detailModal) closeDetailModal();
+      });
+
+      function resetFormState() {
+        editingListingId = null;
+        uploadedImageDataUrl = "";
+        listingForm?.reset();
+        if (imagePreview) {
+          imagePreview.src = "";
+          imagePreview.style.display = "none";
+        }
+        if (formTitleEl) formTitleEl.textContent = "Add a listing";
+        if (submitBtn) submitBtn.textContent = "Publish listing";
+        cancelEditBtn?.classList.add("d-none");
+      }
+
+      cancelEditBtn?.addEventListener("click", resetFormState);
+
+      // MOD EDIT
+      function startEditListing(itemId) {
+        const item = readAllListings().find(x => x.id === itemId);
+        if (!item || !listingForm) return;
+
+        editingListingId = item.id;
+        uploadedImageDataUrl = item.image || item.img || "";
+
+        document.getElementById("listing-title").value = item.title || "";
+        const typeEl = document.getElementById("listing-type");
+        if (typeEl) {
+          typeEl.value = item.type || "product";
+          typeEl.dispatchEvent(new Event("change"));
+        }
+        const catEl = document.getElementById("listing-category");
+        if (catEl) catEl.value = item.category || "";
+
+        document.getElementById("listing-options").value = item.optionsText || "";
+        document.getElementById("listing-unit").value = item.unit || "";
+        document.getElementById("listing-description").value = item.description || "";
+        document.getElementById("listing-price").value = item.price ?? "";
+        document.getElementById("listing-quantity").value = item.quantity ?? item.stock ?? 1;
+        document.getElementById("listing-status").value = (item.status === "closed") ? "closed" : "open";
+        document.getElementById("listing-phone").value = item.phone || "";
+        document.getElementById("listing-rules").checked = true;
+
+        if (imageInput) imageInput.value = "";
+        if (imagePreview) {
+          imagePreview.src = uploadedImageDataUrl;
+          imagePreview.style.display = uploadedImageDataUrl ? "block" : "none";
+        }
+
+        if (formTitleEl) formTitleEl.textContent = "Edit listing";
+        if (submitBtn) submitBtn.textContent = "Update listing";
+        cancelEditBtn?.classList.remove("d-none");
+
+        listingForm.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (typeof toast === "function") toast(`Editing "${item.title}"`);
+      }
+
+      // KLIK PADA JADUAL (VIEW / EDIT / DELETE)
+      tbody?.addEventListener("click", (e) => {
+        const viewBtn = e.target.closest(".btn-view-listing");
+        const editBtn = e.target.closest(".btn-edit-listing");
+        const delBtn = e.target.closest(".btn-del-listing");
+
+        if (viewBtn) return openDetailModal(viewBtn.dataset.id);
+        if (editBtn) return startEditListing(editBtn.dataset.id);
+
+        if (delBtn) {
+          const id = delBtn.dataset.id;
+          if (!confirm("Delete this listing from your store?")) return;
+          saveAllListings(readAllListings().filter(x => x.id !== id));
+          if (editingListingId === id) resetFormState();
+          renderMyListings();
+          if (typeof toast === "function") toast("Listing deleted.");
+        }
+      });
+
+      // HANTAR BORANG (PUBLISH BARU / UPDATE LISTING + GAMBAR)
+      listingForm?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+
+        const user = typeof current === "function" ? current() : {};
+        const all = readAllListings();
+
+        const payload = {
+          title: document.getElementById("listing-title").value.trim(),
+          type: document.getElementById("listing-type").value,
+          category: document.getElementById("listing-category").value,
+          optionsText: document.getElementById("listing-options").value.trim(),
+          unit: document.getElementById("listing-unit").value.trim(),
+          description: document.getElementById("listing-description").value.trim(),
+          price: Number(document.getElementById("listing-price").value),
+          quantity: Number(document.getElementById("listing-quantity").value),
+          status: document.getElementById("listing-status").value,
+          phone: document.getElementById("listing-phone").value.trim(),
+          owner: user?.name || "Campus Shop",
+          ownerId: user?.id || "seller-demo",
+          sellerEmail: user?.email || ""
+        };
+
+        if (editingListingId) {
+          const idx = all.findIndex(x => x.id === editingListingId);
+          if (idx !== -1) {
+            const finalImg = uploadedImageDataUrl || all[idx].image || all[idx].img || "";
+            all[idx] = {
+              ...all[idx],
+              ...payload,
+              image: finalImg,
+              img: finalImg
+            };
+            saveAllListings(all);
+          }
+          if (typeof toast === "function") toast("Listing & image updated!");
+        } else {
+          const newItem = {
+            id: "l-" + Date.now(),
+            ...payload,
+            image: uploadedImageDataUrl,
+            img: uploadedImageDataUrl,
+            popular: false
+          };
+          saveAllListings([newItem, ...all]);
+          if (typeof toast === "function") toast("New listing published!");
+        }
+
+        resetFormState();
+        renderMyListings();
+      }, true);
+
+      sortSelect?.addEventListener("change", renderMyListings);
+      renderMyListings();
+    });
+  </script>
+</body>
+</html>

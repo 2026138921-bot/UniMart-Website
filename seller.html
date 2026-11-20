@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seller Analytics &amp; Overview | UniMart</title>
+  <link rel="icon" type="image/png" href="image/logo.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root {
+      --v-card-bg: #ffffff;
+      --v-card-border: rgba(109, 40, 217, 0.12);
+      --v-card-shadow: 0 10px 28px rgba(31, 27, 46, 0.06);
+      --v-subcard-bg: #f6f3ff;
+      --v-text-main: #1b1630;
+      --v-text-muted: #6b6485;
+      --v-accent: #6d28d9;
+      --v-accent-2: #8b5cf6;
+      --v-welcome-bg: linear-gradient(135deg, #4c1d95 0%, #6d28d9 52%, #8b5cf6 100%);
+      --v-chart-panel: linear-gradient(180deg, #241744 0%, #160e2c 100%);
+    }
+
+    body.dark {
+      --v-card-bg: linear-gradient(127deg, rgba(24, 17, 48, 0.96) 28%, rgba(36, 24, 72, 0.92) 76%);
+      --v-card-border: rgba(167, 139, 250, 0.18);
+      --v-card-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+      --v-subcard-bg: rgba(15, 10, 32, 0.65);
+      --v-text-main: #ffffff;
+      --v-text-muted: #a79ec4;
+      --v-welcome-bg: linear-gradient(135deg, #1d1142 0%, #3b1d82 55%, #5b21b6 100%);
+      --v-chart-panel: linear-gradient(180deg, #130b29 0%, #0b061a 100%);
+    }
+
+    .v-card {
+      background: var(--v-card-bg);
+      border: 1px solid var(--v-card-border);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: var(--v-card-shadow);
+      color: var(--v-text-main);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .v-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .v-kpi-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #7c3aed, #5b21b6);
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      box-shadow: 0 6px 16px rgba(109, 40, 217, 0.32);
+    }
+
+    .v-muted {
+      color: var(--v-text-muted) !important;
+    }
+
+    /* Kad Welcome & Shop Status */
+    .v-welcome-card {
+      background: var(--v-welcome-bg);
+      border-radius: 20px;
+      padding: 24px;
+      color: #ffffff;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 14px 32px rgba(76, 29, 149, 0.28);
+    }
+
+    .v-welcome-card::before {
+      content: "";
+      position: absolute;
+      width: 230px;
+      height: 230px;
+      right: -45px;
+      top: -45px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(196, 181, 253, 0.38) 0%, rgba(139, 92, 246, 0) 70%);
+      pointer-events: none;
+    }
+
+    .v-welcome-card::after {
+      content: "";
+      position: absolute;
+      width: 170px;
+      height: 170px;
+      right: 55px;
+      bottom: -55px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .v-status-pill-box {
+      background: rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 14px;
+      padding: 12px 16px;
+    }
+
+    /* Sub-kad kecil di dalam kad kanan */
+    .v-mini-stat {
+      background: var(--v-subcard-bg);
+      border: 1px solid var(--v-card-border);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+
+    /* Panel Bar Chart Menegak Ala Vision UI */
+    .v-bars-panel {
+      background: var(--v-chart-panel);
+      border-radius: 16px;
+      padding: 18px 16px 14px;
+      height: 195px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .v-bar-col {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .v-bar-stick {
+      width: 8px;
+      border-radius: 99px;
+      background: linear-gradient(180deg, #ffffff 0%, #c4b5fd 100%);
+      transition: height 0.45s ease;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.35);
+    }
+
+    .v-bar-day {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.72);
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    .v-funnel-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      background: #7c3aed;
+      color: #fff;
+      display: inline-grid;
+      place-items: center;
+      font-size: 12px;
+    }
+
+    /* Modal & Jadual */
+    .perf-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 14, 41, 0.6);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 9998;
+    }
+
+    .perf-modal-box {
+      background: var(--surface, #ffffff);
+      color: var(--ink, #1f1b2e);
+      border: 1px solid var(--line, #e5defa);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 540px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 22px;
+      box-shadow: 0 20px 45px rgba(18, 11, 44, 0.3);
+      animation: modalFadeIn 0.18s ease;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .sortable-th:hover {
+      background-color: rgba(111, 66, 193, 0.1) !important;
+      color: #7c3aed;
+    }
+  </style>
+</head>
+<body data-page="seller">
+  <div id="app-header"></div>
+  <div class="app-shell">
+    <aside id="app-sidebar"></aside>
+    <main class="main-content">
+
+      <!-- HEADER BAR -->
+<!-- HEADER BAR -->
+      <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
+        <div class="page-heading mb-0">
+          <h1 class="mb-0" style="line-height: 1.2;">Seller Analytics &amp; Overview</h1>
+        </div>
+        <button class="btn btn-primary btn-sm fw-semibold flex-shrink-0" id="export-seller-report" style="border-radius: 12px; padding: 10px 18px; font-size: 13px; white-space: nowrap; margin-left: 570px; margin-top: 50px;">
+          Export Sales Report (CSV)
+        </button>
+      </div>      
+
+      <div id="seller-dashboard-body">
+
+        <!-- BARIS 1: 4 KAD KPI MINI (ALA VISION UI) -->
+        <div class="row g-3 mb-4">
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="v-card d-flex align-items-center justify-content-between h-100">
+              <div>
+                <span class="small fw-semibold v-muted d-block">Total Sales</span>
+                <div class="d-flex align-items-baseline gap-2 mt-1">
+                  <span class="fw-bold fs-4" id="kpi-total-sales">RM 0.00</span>
+                  <span class="small fw-bold text-success">+18.4%</span>
+                </div>
+              </div>
+              <div class="v-kpi-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="v-card d-flex align-items-center justify-content-between h-100">
+              <div>
+                <span class="small fw-semibold v-muted d-block">Orders Sold</span>
+                <div class="d-flex align-items-baseline gap-2 mt-1">
+                  <span class="fw-bold fs-4" id="kpi-total-orders">0 Sold</span>
+                  <span class="small fw-bold text-success">+12.5%</span>
+                </div>
+              </div>
+              <div class="v-kpi-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="v-card d-flex align-items-center justify-content-between h-100">
+              <div>
+                <span class="small fw-semibold v-muted d-block">Active Listings</span>
+                <div class="d-flex align-items-baseline gap-2 mt-1">
+                  <span class="fw-bold fs-4" id="kpi-active-listings">0 Items</span>
+                  <span class="small fw-bold text-info" id="kpi-avg-order-val">RM 0.00 avg</span>
+                </div>
+              </div>
+              <div class="v-kpi-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12 col-sm-6 col-xl-3">
+            <div class="v-card d-flex align-items-center justify-content-between h-100">
+              <div>
+                <span class="small fw-semibold v-muted d-block">Conversion Rate</span>
+                <div class="d-flex align-items-baseline gap-2 mt-1">
+                  <span class="fw-bold fs-4" id="kpi-conversion-rate">0.0%</span>
+                  <span class="small fw-bold text-success">+4.2%</span>
+                </div>
+              </div>
+              <div class="v-kpi-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                  <polyline points="17 6 23 6 23 12"></polyline>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BARIS 2: WELCOME + SHOP STATUS (KIRI) | SATISFACTION GAUGE (TENGAH) | ADS & ROAS RING (KANAN) -->
+        <div class="row g-3 mb-4 align-items-stretch">
+          <!-- KIRI: Welcome Banner + Shop Status Toggle -->
+          <div class="col-12 col-lg-5">
+            <div class="v-welcome-card h-100 d-flex flex-column justify-content-between">
+              <div>
+                <span class="small opacity-75 d-block">Welcome back,</span>
+                <h2 class="fw-bold fs-3 mb-1" id="seller-welcome-name">UniMart Seller</h2>
+                <p class="small opacity-75 mb-3">Glad to see you again! Manage your campus store availability and track daily student orders.</p>
+              </div>
+
+              <div class="v-status-pill-box d-flex align-items-center justify-content-between gap-2" id="shop-status-card">
+                <div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold small">Shop Status:</span>
+                    <span id="shop-status-badge" class="badge bg-success px-2 py-1">OPEN</span>
+                  </div>
+                  <div style="font-size: 11.5px; opacity: 0.85;" class="mt-1" id="shop-status-desc">
+                    Accepting orders from students.
+                  </div>
+                </div>
+                <div class="form-check form-switch m-0">
+                  <input class="form-check-input" type="checkbox" role="switch" id="shop-status-toggle" style="width: 2.8rem; height: 1.4rem; cursor: pointer;" checked>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- TENGAH: Satisfaction Rate (Semi-Circle Gauge) -->
+          <div class="col-12 col-md-6 col-lg-3">
+            <div class="v-card h-100 d-flex flex-column justify-content-between">
+              <div>
+                <h6 class="fw-bold mb-0">Satisfaction Rate</h6>
+                <span class="small v-muted">From student reviews</span>
+              </div>
+
+              <div class="position-relative d-flex flex-column align-items-center my-2">
+                <svg viewBox="0 0 200 115" style="width: 100%; max-width: 195px;">
+                  <defs>
+                    <linearGradient id="satGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#8b5cf6" />
+                      <stop offset="100%" stop-color="#38bdf8" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="rgba(139,92,246,0.18)" stroke-width="14" stroke-linecap="round" />
+                  <path d="M 20 100 A 80 80 0 0 1 172 68" fill="none" stroke="url(#satGrad)" stroke-width="14" stroke-linecap="round" />
+                </svg>
+                <div style="margin-top: -46px; width: 42px; height: 42px; border-radius: 50%; background: #7c3aed; color: #fff; display: grid; place-items: center; box-shadow: 0 6px 16px rgba(124,58,237,0.4);">
+                  😊
+                </div>
+              </div>
+
+              <div class="v-mini-stat d-flex justify-content-between align-items-center text-center">
+                <span class="small v-muted">0%</span>
+                <div>
+                  <div class="fw-bold fs-5 lh-1">95%</div>
+                  <span style="font-size: 11px;" class="v-muted">Based on ratings</span>
+                </div>
+                <span class="small v-muted">100%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- KANAN: Traffic & Ads Tracking (Circular Score Ring) -->
+          <div class="col-12 col-md-6 col-lg-4">
+            <div class="v-card h-100 d-flex flex-column justify-content-between">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h6 class="fw-bold mb-0">Marketing &amp; Traffic</h6>
+                  <span class="small v-muted">Featured campus promos</span>
+                </div>
+                <span class="badge rounded-pill" style="background: rgba(124,58,237,0.14); color: #8b5cf6;">+8.1%</span>
+              </div>
+
+              <div class="row g-2 align-items-center my-2">
+                <div class="col-6 d-flex flex-column gap-2">
+                  <div class="v-mini-stat">
+                    <span class="small v-muted d-block">Total Views</span>
+                    <strong class="fs-6" id="kpi-traffic-count">0 views</strong>
+                  </div>
+                  <div class="v-mini-stat">
+                    <span class="small v-muted d-block">Promo CTR</span>
+                    <strong class="fs-6">6.2%</strong>
+                  </div>
+                </div>
+
+                <div class="col-6 d-flex justify-content-center">
+                  <div class="position-relative d-grid" style="place-items: center; width: 136px; height: 136px;">
+                    <svg viewBox="0 0 120 120" style="width: 136px; height: 136px; transform: rotate(-90deg);">
+                      <defs>
+                        <linearGradient id="roasGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stop-color="#10b981" />
+                          <stop offset="100%" stop-color="#38bdf8" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="60" cy="60" r="48" fill="none" stroke="rgba(16,185,129,0.16)" stroke-width="10" />
+                      <circle cx="60" cy="60" r="48" fill="none" stroke="url(#roasGrad)" stroke-width="10" stroke-dasharray="301" stroke-dashoffset="42" stroke-linecap="round" />
+                    </svg>
+                    <div class="position-absolute text-center">
+                      <span style="font-size: 11px;" class="v-muted d-block">Ads ROAS</span>
+                      <strong class="fs-3 lh-1" id="kpi-ads-roas">3.6x</strong>
+                      <span style="font-size: 11px;" class="v-muted d-block">Total Score</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BARIS 3: SALES OVERVIEW WAVE CHART (KIRI) + ACTIVE USERS BAR CHART (KANAN) -->
+        <div class="row g-3 mb-4 align-items-stretch">
+          <!-- KIRI: Smooth Area/Wave Chart -->
+          <div class="col-12 col-lg-7">
+            <div class="v-card h-100 d-flex flex-column justify-content-between">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                  <h6 class="fw-bold mb-0">Sales Overview</h6>
+                  <span class="small"><strong class="text-success">(+18.4%)</strong> <span class="v-muted">more in 2026</span></span>
+                </div>
+                <span class="badge rounded-pill" style="background: #6d28d9; color: #fff; padding: 6px 12px;">Weekly: RM 2,880.00</span>
+              </div>
+
+              <div class="w-100">
+                <svg viewBox="0 0 600 220" style="width: 100%; height: 225px; overflow: visible;">
+                  <defs>
+                    <linearGradient id="waveFill1" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.48" />
+                      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0.0" />
+                    </linearGradient>
+                    <linearGradient id="waveFill2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35" />
+                      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.0" />
+                    </linearGradient>
+                  </defs>
+
+                  <!-- Garis Grid Melintang -->
+                  <g stroke="rgba(139,92,246,0.16)" stroke-dasharray="4 4" stroke-width="1">
+                    <line x1="40" y1="25" x2="585" y2="25" />
+                    <line x1="40" y1="65" x2="585" y2="65" />
+                    <line x1="40" y1="105" x2="585" y2="105" />
+                    <line x1="40" y1="145" x2="585" y2="145" />
+                    <line x1="40" y1="185" x2="585" y2="185" />
+                  </g>
+
+                  <!-- Label Y-Axis -->
+                  <g fill="#8b83a8" font-size="11" font-weight="600">
+                    <text x="5" y="29">600</text>
+                    <text x="5" y="69">450</text>
+                    <text x="5" y="109">300</text>
+                    <text x="5" y="149">150</text>
+                    <text x="18" y="189">0</text>
+                  </g>
+
+                  <!-- Lengkung Kedua (Traffic Trend) -->
+                  <path d="M45,145 C105,120 155,155 220,125 C285,95 345,130 410,100 C475,70 530,115 580,85 L580,185 L45,185 Z" fill="url(#waveFill2)" />
+                  <path d="M45,145 C105,120 155,155 220,125 C285,95 345,130 410,100 C475,70 530,115 580,85" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+
+                  <!-- Lengkung Utama (Revenue Trend) -->
+                  <path d="M45,120 C110,80 165,130 230,90 C295,50 355,95 420,55 C485,20 535,60 580,35 L580,185 L45,185 Z" fill="url(#waveFill1)" />
+                  <path d="M45,120 C110,80 165,130 230,90 C295,50 355,95 420,55 C485,20 535,60 580,35" fill="none" stroke="#8b5cf6" stroke-width="3.5" stroke-linecap="round" />
+
+                  <!-- Label X-Axis (Mon - Sun) -->
+                  <g fill="#8b83a8" font-size="11" font-weight="600" text-anchor="middle">
+                    <text x="65" y="208">Mon</text>
+                    <text x="150" y="208">Tue</text>
+                    <text x="235" y="208">Wed</text>
+                    <text x="320" y="208">Thu</text>
+                    <text x="405" y="208">Fri</text>
+                    <text x="490" y="208">Sat</text>
+                    <text x="565" y="208">Sun</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- KANAN: Active Users & Buyer Funnel Bar Chart -->
+          <div class="col-12 col-lg-5">
+            <div class="v-card h-100 d-flex flex-column justify-content-between">
+              <div class="v-bars-panel mb-3" id="seller-sales-chart"></div>
+
+              <div>
+                <h6 class="fw-bold mb-0">Buyer Funnel &amp; Activity</h6>
+                <span class="small"><strong class="text-success">(+23%)</strong> <span class="v-muted">than last week</span></span>
+
+                <div class="row g-2 mt-2" id="seller-funnel-grid">
+                  <div class="col-3">
+                    <div class="d-flex align-items-center gap-1 mb-1">
+                      <span class="v-funnel-icon">👁</span>
+                      <span class="small v-muted">Views</span>
+                    </div>
+                    <strong class="small" id="funnel-views">0</strong>
+                    <div class="progress mt-1" style="height: 4px;"><div class="progress-bar bg-primary" style="width: 78%;"></div></div>
+                  </div>
+                  <div class="col-3">
+                    <div class="d-flex align-items-center gap-1 mb-1">
+                      <span class="v-funnel-icon">⚡</span>
+                      <span class="small v-muted">Clicks</span>
+                    </div>
+                    <strong class="small">68%</strong>
+                    <div class="progress mt-1" style="height: 4px;"><div class="progress-bar bg-info" style="width: 68%;"></div></div>
+                  </div>
+                  <div class="col-3">
+                    <div class="d-flex align-items-center gap-1 mb-1">
+                      <span class="v-funnel-icon">🛒</span>
+                      <span class="small v-muted">Cart</span>
+                    </div>
+                    <strong class="small">42%</strong>
+                    <div class="progress mt-1" style="height: 4px;"><div class="progress-bar bg-success" style="width: 42%;"></div></div>
+                  </div>
+                  <div class="col-3">
+                    <div class="d-flex align-items-center gap-1 mb-1">
+                      <span class="v-funnel-icon">📦</span>
+                      <span class="small v-muted">Items</span>
+                    </div>
+                    <strong class="small" id="funnel-items">0</strong>
+                    <div class="progress mt-1" style="height: 4px;"><div class="progress-bar bg-warning" style="width: 65%;"></div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BARIS 4: JADUAL PRODUCT PERFORMANCE DENGAN SORTING -->
+        <div class="v-card">
+          <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <div>
+              <h5 class="fw-bold mb-0">Shop Product Performance</h5>
+              <small class="v-muted">Click any column header to sort ascending or descending.</small>
+            </div>
+            <input type="text" id="perf-search-input" class="form-control form-control-sm" style="max-width: 240px;" placeholder="Filter product or category...">
+          </div>
+
+          <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0" id="product-perf-table">
+              <thead class="table-light">
+                <tr>
+                  <th class="sortable-th" data-sort="name" style="cursor:pointer;">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span>Product</span>
+                      <span class="sort-icon text-muted ms-2">↕</span>
+                    </div>
+                  </th>
+                  <th class="sortable-th" data-sort="category" style="cursor:pointer;">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span>Category</span>
+                      <span class="sort-icon text-muted ms-2">↕</span>
+                    </div>
+                  </th>
+                  <th class="sortable-th" data-sort="conv" style="cursor:pointer;">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span>Conversion Rate</span>
+                      <span class="sort-icon text-muted ms-2">↕</span>
+                    </div>
+                  </th>
+                  <th class="sortable-th" data-sort="revenue" style="cursor:pointer;">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <span>Revenue (RM)</span>
+                      <span class="sort-icon text-muted ms-2">↕</span>
+                    </div>
+                  </th>
+                  <th class="text-end">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="product-perf-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Pop-out Modal: Detail Information (View) & Edit -->
+      <div id="perf-detail-modal" class="perf-modal-overlay" style="display:none;">
+        <div class="perf-modal-box">
+          <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+            <h5 class="fw-bold mb-0" id="perf-modal-title">Product Performance Details</h5>
+            <button type="button" id="perf-modal-close" class="btn-close" aria-label="Close"></button>
+          </div>
+          <div id="perf-modal-body"></div>
+        </div>
+      </div>
+
+      <div id="app-footer"></div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      let sortConfig = { key: "revenue", dir: "desc" };
+      let currentPerfRows = [];
+
+      const tbody = document.getElementById("product-perf-tbody");
+      const modal = document.getElementById("perf-detail-modal");
+      const modalTitle = document.getElementById("perf-modal-title");
+      const modalBody = document.getElementById("perf-modal-body");
+      const searchInput = document.getElementById("perf-search-input");
+
+      // Papar nama seller semasa pada kad Welcome Back
+      const curUser = typeof current === "function" ? current() : null;
+      if (curUser?.name && document.getElementById("seller-welcome-name")) {
+        document.getElementById("seller-welcome-name").textContent = curUser.name;
+      }
+
+      // Kawalan Suis Open / Closed Shop Status
+      const statusToggle = document.getElementById("shop-status-toggle");
+      const statusBadge = document.getElementById("shop-status-badge");
+      const statusDesc = document.getElementById("shop-status-desc");
+      const shopStatusKey = "unimart_shop_status_" + (curUser?.id || curUser?.email || "default");
+
+      function syncShopStatusUI(isOpen) {
+        if (!statusBadge || !statusDesc) return;
+        statusBadge.textContent = isOpen ? "OPEN" : "CLOSED";
+        statusBadge.className = isOpen ? "badge bg-success px-2 py-1" : "badge bg-danger px-2 py-1";
+        statusDesc.textContent = isOpen
+          ? "Accepting orders from students."
+          : "Shop is temporarily closed to new orders.";
+      }
+
+      if (statusToggle) {
+        const savedClosed = localStorage.getItem(shopStatusKey) === "closed";
+        statusToggle.checked = !savedClosed;
+        syncShopStatusUI(!savedClosed);
+
+        statusToggle.addEventListener("change", () => {
+          const isOpen = statusToggle.checked;
+          localStorage.setItem(shopStatusKey, isOpen ? "open" : "closed");
+          syncShopStatusUI(isOpen);
+          if (typeof toast === "function") toast(`Shop status updated to ${isOpen ? "OPEN" : "CLOSED"}.`);
+        });
+      }
+
+function computePerfData() {
+        const allListings = typeof listings === "function" ? listings() : [];
+        const user = typeof current === "function" ? current() : null;
+
+        // Tapis hanya produk milik akaun seller ini sahaja
+        const sellerItems = allListings.filter(item =>
+          (user?.id && item.ownerId === user.id) ||
+          (user?.email && item.sellerEmail === user.email) ||
+          (user?.name && item.owner === user.name)
+        );
+
+        // Jika seller belum ada item sendiri, papar 4 item contoh pertama sahaja
+        const targetList = sellerItems.length > 0 ? sellerItems : allListings.slice(0, 4);
+
+        return targetList.map((item, idx) => {
+          const sold = item.sold !== undefined
+            ? Number(item.sold)
+            : (item.popular ? (18 + (idx % 5) * 4) : (6 + (idx % 4) * 3));
+          const views = item.views !== undefined
+            ? Number(item.views)
+            : sold * (14 + (idx % 6) * 2);
+          const conv = Number(((sold / Math.max(1, views)) * 100).toFixed(1));
+          const revenue = Number((sold * Number(item.price || 0)).toFixed(2));
+          return { ...item, sold, views, conv, revenue };
+        });
+      }
+      function renderSellerAnalytics() {
+        const rawRows = computePerfData();
+
+        const totalSales = rawRows.reduce((sum, x) => sum + x.revenue, 0);
+        const totalSold = rawRows.reduce((sum, x) => sum + x.sold, 0);
+        const totalViews = rawRows.reduce((sum, x) => sum + x.views, 0);
+        const overallConv = ((totalSold / Math.max(1, totalViews)) * 100).toFixed(1);
+        const avgOrder = totalSold > 0 ? (totalSales / totalSold) : 0;
+
+        if (document.getElementById("kpi-total-sales")) document.getElementById("kpi-total-sales").textContent = "RM " + totalSales.toFixed(2);
+        if (document.getElementById("kpi-active-listings")) document.getElementById("kpi-active-listings").textContent = `${rawRows.length} Items`;
+        if (document.getElementById("kpi-avg-order-val")) document.getElementById("kpi-avg-order-val").textContent = `RM ${avgOrder.toFixed(2)} avg`;
+        if (document.getElementById("kpi-total-orders")) document.getElementById("kpi-total-orders").textContent = `${totalSold} Sold`;
+        if (document.getElementById("kpi-conversion-rate")) document.getElementById("kpi-conversion-rate").textContent = `${overallConv}%`;
+        if (document.getElementById("kpi-traffic-count")) document.getElementById("kpi-traffic-count").textContent = `${totalViews.toLocaleString()} views`;
+        if (document.getElementById("funnel-views")) document.getElementById("funnel-views").textContent = totalViews.toLocaleString();
+        if (document.getElementById("funnel-items")) document.getElementById("funnel-items").textContent = `${rawRows.length} items`;
+
+        const weeklyData = [
+          { day: "Mon", val: 65, amount: "RM 320" },
+          { day: "Tue", val: 80, amount: "RM 410" },
+          { day: "Wed", val: 52, amount: "RM 280" },
+          { day: "Thu", val: 92, amount: "RM 490" },
+          { day: "Fri", val: 100, amount: "RM 560" },
+          { day: "Sat", val: 72, amount: "RM 375" },
+          { day: "Sun", val: 88, amount: "RM 445" }
+        ];
+
+        const chartEl = document.getElementById("seller-sales-chart");
+        if (chartEl) {
+          chartEl.innerHTML = weeklyData.map(d => `
+            <div class="v-bar-col" title="${d.day}: ${d.amount}">
+              <div class="v-bar-stick" style="height: ${d.val}%;"></div>
+              <span class="v-bar-day">${d.day}</span>
+            </div>
+          `).join("");
+        }
+
+        const query = (searchInput?.value || "").trim().toLowerCase();
+        currentPerfRows = rawRows
+          .filter(p =>
+            String(p.title || "").toLowerCase().includes(query) ||
+            String(p.category || "").toLowerCase().includes(query)
+          )
+          .sort((a, b) => {
+            const valA = a[sortConfig.key];
+            const valB = b[sortConfig.key];
+            if (typeof valA === "string") {
+              return sortConfig.dir === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            }
+            return sortConfig.dir === "asc" ? valA - valB : valB - valA;
+          });
+
+        document.querySelectorAll(".sortable-th").forEach(th => {
+          const icon = th.querySelector(".sort-icon");
+          if (!icon) return;
+          const thKey = th.dataset.sort === "name" ? "title" : th.dataset.sort;
+          if (thKey === sortConfig.key) {
+            icon.textContent = sortConfig.dir === "asc" ? "↑" : "↓";
+            icon.classList.remove("text-muted");
+          } else {
+            icon.textContent = "↕";
+            icon.classList.add("text-muted");
+          }
+        });
+
+        if (tbody) {
+          if (!currentPerfRows.length) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No product listings found.</td></tr>`;
+          } else {
+            tbody.innerHTML = currentPerfRows.map(item => `
+              <tr>
+                <td><b>${escapeHTML(item.title)}</b></td>
+                <td>${escapeHTML(item.category)}</td>
+                <td><span class="fw-semibold" style="color: #8b5cf6;">${item.conv.toFixed(1)}%</span></td>
+                <td><b>RM ${item.revenue.toFixed(2)}</b></td>
+                <td class="text-end">
+                  <div class="d-inline-flex gap-1">
+                    <button type="button" class="btn btn-sm btn-outline-primary btn-perf-view" data-id="${escapeHTML(item.id)}">View</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-perf-edit" data-id="${escapeHTML(item.id)}">Edit</button>
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-perf-delete" data-id="${escapeHTML(item.id)}">Delete</button>
+                  </div>
+                </td>
+              </tr>
+            `).join("");
+          }
+        }
+      }
+
+      document.querySelectorAll(".sortable-th").forEach(th => {
+        th.addEventListener("click", () => {
+          const key = th.dataset.sort === "name" ? "title" : th.dataset.sort;
+          if (sortConfig.key === key) {
+            sortConfig.dir = sortConfig.dir === "asc" ? "desc" : "asc";
+          } else {
+            sortConfig.key = key;
+            sortConfig.dir = "asc";
+          }
+          renderSellerAnalytics();
+        });
+      });
+
+      searchInput?.addEventListener("input", renderSellerAnalytics);
+
+      function openViewPopout(id) {
+        const item = currentPerfRows.find(x => String(x.id) === String(id));
+        if (!item || !modal) return;
+
+        modalTitle.textContent = item.title;
+        modalBody.innerHTML = `
+          ${item.image ? `<img src="${escapeHTML(item.image)}" alt="${escapeHTML(item.title)}" class="w-100 rounded mb-3" style="max-height:170px; object-fit:cover;">` : ""}
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <div class="p-2 rounded border bg-light">
+                <div class="small text-muted">Total Revenue</div>
+                <div class="fw-bold fs-5 text-success">RM ${item.revenue.toFixed(2)}</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-2 rounded border bg-light">
+                <div class="small text-muted">Conversion Rate</div>
+                <div class="fw-bold fs-5" style="color:#6d28d9;">${item.conv.toFixed(1)}%</div>
+              </div>
+            </div>
+          </div>
+
+          <h6 class="fw-bold small text-uppercase text-muted mb-2">Detailed Metrics &amp; Extra Information</h6>
+          <table class="table table-sm table-bordered mb-3">
+            <tbody>
+              <tr><th class="bg-light" style="width:42%;">Category</th><td>${escapeHTML(item.category)}</td></tr>
+              <tr><th class="bg-light">Unit Price</th><td>RM ${Number(item.price || 0).toFixed(2)}</td></tr>
+              <tr><th class="bg-light">Total Views</th><td>${item.views.toLocaleString()} views</td></tr>
+              <tr><th class="bg-light">Units Sold</th><td>${item.sold} units</td></tr>
+              <tr><th class="bg-light">Seller / Shop</th><td>${escapeHTML(item.owner || "UniMart Official Seller")}</td></tr>
+              <tr><th class="bg-light">Rating</th><td>⭐ ${item.rating || "4.8"} / 5.0</td></tr>
+            </tbody>
+          </table>
+
+          <div class="mb-3">
+            <div class="small fw-bold text-muted mb-1">Product Description</div>
+            <div class="p-2 rounded border bg-light small">${escapeHTML(item.desc || item.description || "No additional description provided.")}</div>
+          </div>
+
+          <div class="text-end">
+            <button type="button" class="btn btn-secondary btn-sm" id="perf-modal-done">Close</button>
+          </div>
+        `;
+        modal.style.display = "flex";
+        document.getElementById("perf-modal-done")?.addEventListener("click", () => modal.style.display = "none");
+      }
+
+      function openEditPopout(id) {
+        const list = typeof listings === "function" ? listings() : [];
+        const idx = list.findIndex(x => String(x.id) === String(id));
+        if (idx === -1 || !modal) return;
+        const item = list[idx];
+        const computed = currentPerfRows.find(x => String(x.id) === String(id)) || {};
+
+        modalTitle.textContent = "Edit Product Listing";
+        modalBody.innerHTML = `
+          <form id="perf-edit-listing-form">
+            <div class="mb-2">
+              <label class="form-label small fw-bold">Product Name</label>
+              <input type="text" class="form-control form-control-sm" id="edit-l-title" value="${escapeHTML(item.title)}" required>
+            </div>
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label class="form-label small fw-bold">Category</label>
+                <input type="text" class="form-control form-control-sm" id="edit-l-cat" value="${escapeHTML(item.category)}" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-bold">Price (RM)</label>
+                <input type="number" step="0.01" class="form-control form-control-sm" id="edit-l-price" value="${Number(item.price || 0)}" required>
+              </div>
+            </div>
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label class="form-label small fw-bold">Total Views</label>
+                <input type="number" class="form-control form-control-sm" id="edit-l-views" value="${computed.views || 0}" required>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-bold">Units Sold</label>
+                <input type="number" class="form-control form-control-sm" id="edit-l-sold" value="${computed.sold || 0}" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label small fw-bold">Description</label>
+              <textarea class="form-control form-control-sm" id="edit-l-desc" rows="2">${escapeHTML(item.desc || item.description || "")}</textarea>
+            </div>
+            <div class="d-flex justify-content-end gap-2">
+              <button type="button" class="btn btn-light btn-sm" id="perf-edit-cancel">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+            </div>
+          </form>
+        `;
+        modal.style.display = "flex";
+        document.getElementById("perf-edit-cancel")?.addEventListener("click", () => modal.style.display = "none");
+
+        document.getElementById("perf-edit-listing-form")?.addEventListener("submit", e => {
+          e.preventDefault();
+          list[idx].title = document.getElementById("edit-l-title").value.trim();
+          list[idx].category = document.getElementById("edit-l-cat").value.trim();
+          list[idx].price = parseFloat(document.getElementById("edit-l-price").value) || 0;
+          list[idx].views = parseInt(document.getElementById("edit-l-views").value, 10) || 0;
+          list[idx].sold = parseInt(document.getElementById("edit-l-sold").value, 10) || 0;
+          list[idx].desc = document.getElementById("edit-l-desc").value.trim();
+
+          if (typeof setData === "function" && typeof STORE !== "undefined") {
+            setData(STORE.listings, list);
+          }
+          modal.style.display = "none";
+          renderSellerAnalytics();
+          if (typeof toast === "function") toast("Product listing updated.");
+        });
+      }
+
+      tbody?.addEventListener("click", e => {
+        const viewBtn = e.target.closest(".btn-perf-view");
+        const editBtn = e.target.closest(".btn-perf-edit");
+        const delBtn = e.target.closest(".btn-perf-delete");
+
+        if (viewBtn) {
+          openViewPopout(viewBtn.dataset.id);
+        } else if (editBtn) {
+          openEditPopout(editBtn.dataset.id);
+        } else if (delBtn) {
+          const id = delBtn.dataset.id;
+          if (confirm("Are you sure you want to delete this product?")) {
+            const updated = (typeof listings === "function" ? listings() : []).filter(x => String(x.id) !== String(id));
+            if (typeof setData === "function" && typeof STORE !== "undefined") {
+              setData(STORE.listings, updated);
+            }
+            renderSellerAnalytics();
+            if (typeof toast === "function") toast("Product deleted.");
+          }
+        }
+      });
+
+      document.getElementById("perf-modal-close")?.addEventListener("click", () => modal.style.display = "none");
+      modal?.addEventListener("click", e => {
+        if (e.target === modal) modal.style.display = "none";
+      });
+
+      renderSellerAnalytics();
+
+      document.getElementById("export-seller-report")?.addEventListener("click", () => {
+        const rows = [["Product/Service", "Category", "Price (RM)", "Views", "Units Sold", "Conversion (%)", "Revenue (RM)"]];
+        currentPerfRows.forEach(item => {
+          rows.push([
+            `"${String(item.title).replace(/"/g, '""')}"`,
+            `"${String(item.category).replace(/"/g, '""')}"`,
+            Number(item.price || 0).toFixed(2),
+            item.views,
+            item.sold,
+            item.conv.toFixed(1),
+            item.revenue.toFixed(2)
+          ]);
+        });
+        const csv = rows.map(r => r.join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "unimart_seller_sales_report.csv";
+        a.click();
+      });
+    });
+  </script>
+</body>
+</html>

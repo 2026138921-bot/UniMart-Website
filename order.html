@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order Management | UniMart Seller</title>
+    <link rel="icon" type="image/png" href="image/logo.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .order-badge-paid { background: #dcfce7; color: #15803d; font-weight: 700; padding: 4px 10px; border-radius: 20px; font-size: 11px; }
+    .order-badge-unpaid { background: #fef3c7; color: #b45309; font-weight: 700; padding: 4px 10px; border-radius: 20px; font-size: 11px; }
+    .order-detail-box { background: #f8f6ff; border: 1px solid #e5ddff; border-radius: 12px; padding: 14px; }
+  </style>
+</head>
+<body data-page="orders">
+  <div id="app-header"></div>
+  <div class="app-shell">
+    <aside id="app-sidebar"></aside>
+    <main class="main-content">
+      <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+        <div class="page-heading mb-0">
+          <span class="eyebrow">SELLER CENTRE</span>
+          <h1>Order Management</h1>
+          <p class="mb-0">Track incoming student orders, verify payment details, and update fulfilment status.</p>
+        </div>
+        <select id="order-status-filter" class="form-select form-select-sm" style="width: 190px;">
+          <option value="all">All Orders</option>
+          <option value="Pending">Pending</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
+
+      <div id="orders-content">
+        <div class="content-card">
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+<thead class="table-light">
+  <tr>
+    <th class="order-sort-th" data-sort="id" style="cursor:pointer;">
+      <div class="d-flex justify-content-between align-items-center">
+        <span>Order ID &amp; Date</span>
+        <span class="sort-icon text-muted ms-2">↕</span>
+      </div>
+    </th>
+    <th class="order-sort-th" data-sort="customerName" style="cursor:pointer;">
+      <div class="d-flex justify-content-between align-items-center">
+        <span>Customer</span>
+        <span class="sort-icon text-muted ms-2">↕</span>
+      </div>
+    </th>
+    <th class="order-sort-th" data-sort="total" style="cursor:pointer;">
+      <div class="d-flex justify-content-between align-items-center">
+        <span>Total (RM)</span>
+        <span class="sort-icon text-muted ms-2">↕</span>
+      </div>
+    </th>
+    <th class="order-sort-th" data-sort="status" style="cursor:pointer;">
+      <div class="d-flex justify-content-between align-items-center">
+        <span>Order Status</span>
+        <span class="sort-icon text-muted ms-2">↕</span>
+      </div>
+    </th>
+    <th class="text-end">Actions</th>
+  </tr>
+</thead>
+<tbody id="seller-orders-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="app-footer"></div>
+    </main>
+  </div>
+
+  <div class="modal fade" id="orderInfoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 16px;">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold" id="modal-order-title">Order Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="modal-order-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const ORDER_KEY = "unimart_orders_v1";
+      const seedOrders = [
+        {
+          id: "ORD-202601",
+          date: "15 Nov 2026, 2:15 PM",
+          customerName: "Nurul Aina",
+          studentId: "2024558812",
+          phone: "013-4455667",
+          items: "Homemade Chocolate Cookies (Double Chips) × 2",
+          total: 18.00,
+          fulfilment: "Self Pickup · Kolej Melati",
+          paymentMethod: "DuitNow QR",
+          paymentStatus: "Paid",
+          refNo: "DN-8839201",
+          status: "Pending",
+          notes: "Please pack extra tissue & chili sauce."
+        },
+        {
+          id: "ORD-202602",
+          date: "15 Nov 2026, 11:40 AM",
+          customerName: "Muhammad Hakim",
+          studentId: "2023112290",
+          phone: "017-8899001",
+          items: "Document Printing (15 pages) × 1, Ramen Cup × 2",
+          total: 16.50,
+          fulfilment: "Campus Delivery · FSKM Lobby",
+          paymentMethod: "Online Banking (FPX)",
+          paymentStatus: "Paid",
+          refNo: "FPX-5541209",
+          status: "Completed",
+          notes: "Ring binding requested for printed notes."
+        },
+        {
+          id: "ORD-202603",
+          date: "14 Nov 2026, 8:50 PM",
+          customerName: "Siti Sarah",
+          studentId: "2024991023",
+          phone: "011-22334455",
+          items: "AI & Similarity Checker (AI & Similarity) × 1",
+          total: 10.00,
+          fulfilment: "Digital / WhatsApp Delivery",
+          paymentMethod: "Pay on Pickup / E-Wallet",
+          paymentStatus: "Unpaid",
+          refNo: "Pending Verification",
+          status: "Pending",
+          notes: "PDF report sent via WhatsApp after payment confirmation."
+        }
+      ];
+
+      function getOrders() {
+        const raw = localStorage.getItem(ORDER_KEY);
+        if (!raw) {
+          localStorage.setItem(ORDER_KEY, JSON.stringify(seedOrders));
+          return seedOrders;
+        }
+        return JSON.parse(raw);
+      }
+
+      function saveOrders(list) {
+        localStorage.setItem(ORDER_KEY, JSON.stringify(list));
+      }
+
+      let sortConfig = { key: "id", dir: "desc" };
+      const filterEl = document.getElementById("order-status-filter");
+      const tbody = document.getElementById("seller-orders-tbody");
+
+      // Fungsi untuk menjana kandungan pop-out View
+      function openOrderViewModal(orderId, showModalInstance = true) {
+        const o = getOrders().find(x => x.id === orderId);
+        if (!o) return;
+
+        const payBadge = o.paymentStatus === "Paid"
+          ? `<span class="badge bg-success">Paid</span>`
+          : `<span class="badge bg-warning text-dark">Unpaid</span>`;
+
+        const statusBadge = o.status === "Completed"
+          ? `<span class="badge bg-success">Completed</span>`
+          : o.status === "Cancelled"
+            ? `<span class="badge bg-danger">Cancelled</span>`
+            : `<span class="badge bg-primary">Pending</span>`;
+
+        document.getElementById("modal-order-title").textContent = `Order Details · ${o.id}`;
+        document.getElementById("modal-order-body").innerHTML = `
+          <div class="p-3 rounded border bg-light mb-3 d-flex justify-content-between align-items-center">
+            <div>
+              <div class="small text-muted">Total Order Amount</div>
+              <div class="fw-bold fs-4 text-primary">${money(o.total)}</div>
+            </div>
+            <div class="text-end d-flex flex-column align-items-end gap-1">
+              ${statusBadge}
+              ${payBadge}
+            </div>
+          </div>
+
+          <h6 class="fw-bold small text-uppercase text-muted mb-2">Customer &amp; Fulfilment Info</h6>
+          <table class="table table-sm table-bordered mb-3">
+            <tbody>
+              <tr><th class="bg-light" style="width:40%;">Order ID</th><td><b>${escapeHTML(o.id)}</b></td></tr>
+              <tr><th class="bg-light">Order Date</th><td>${escapeHTML(o.date)}</td></tr>
+              <tr><th class="bg-light">Customer Name</th><td><b>${escapeHTML(o.customerName)}</b></td></tr>
+              <tr><th class="bg-light">Student ID</th><td>${escapeHTML(o.studentId)}</td></tr>
+              <tr><th class="bg-light">Phone Number</th><td>${escapeHTML(o.phone)}</td></tr>
+              <tr><th class="bg-light">Items Ordered</th><td>${escapeHTML(o.items)}</td></tr>
+              <tr><th class="bg-light">Fulfilment Method</th><td>${escapeHTML(o.fulfilment)}</td></tr>
+            </tbody>
+          </table>
+
+          <h6 class="fw-bold small text-uppercase text-muted mb-2">Payment Details</h6>
+          <table class="table table-sm table-bordered mb-3">
+            <tbody>
+              <tr><th class="bg-light" style="width:40%;">Payment Method</th><td>${escapeHTML(o.paymentMethod)}</td></tr>
+              <tr><th class="bg-light">Reference No.</th><td>${escapeHTML(o.refNo)}</td></tr>
+              <tr><th class="bg-light">Payment Status</th><td>${payBadge}</td></tr>
+            </tbody>
+          </table>
+
+          <div class="mb-3">
+            <div class="small fw-bold text-muted mb-1">Buyer Notes / Remarks</div>
+            <div class="p-2 rounded border bg-light small">${escapeHTML(o.notes || "No special instructions from buyer.")}</div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+            <button type="button" class="btn btn-sm btn-outline-success" id="modal-toggle-pay-btn" data-id="${escapeHTML(o.id)}">
+              ${o.paymentStatus === "Paid" ? "Mark as Unpaid" : "✓ Mark as Paid"}
+            </button>
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        `;
+
+        // Butang tukar status bayaran terus dari dalam pop-out View
+        document.getElementById("modal-toggle-pay-btn")?.addEventListener("click", function () {
+          const updated = getOrders().map(item =>
+            item.id === o.id
+              ? { ...item, paymentStatus: item.paymentStatus === "Paid" ? "Unpaid" : "Paid" }
+              : item
+          );
+          saveOrders(updated);
+          if (typeof toast === "function") toast(`Payment status updated for ${o.id}.`);
+          renderOrders();
+          openOrderViewModal(o.id, false); // Segarkan paparan dalam modal tanpa tutup
+        });
+
+        if (showModalInstance) {
+          bootstrap.Modal.getOrCreateInstance(document.getElementById("orderInfoModal")).show();
+        }
+      }
+
+      function renderOrders() {
+        const list = getOrders();
+        const filter = filterEl.value;
+        let filtered = filter === "all" ? [...list] : list.filter(o => o.status === filter);
+
+        // Logik Sorting
+        filtered.sort((a, b) => {
+          const valA = a[sortConfig.key];
+          const valB = b[sortConfig.key];
+
+          if (typeof valA === "number" && typeof valB === "number") {
+            return sortConfig.dir === "asc" ? valA - valB : valB - valA;
+          }
+          return sortConfig.dir === "asc"
+            ? String(valA || "").localeCompare(String(valB || ""))
+            : String(valB || "").localeCompare(String(valA || ""));
+        });
+
+        // Kemas kini ikon panah sorting di hujung kanan header
+        document.querySelectorAll(".order-sort-th").forEach(th => {
+          const icon = th.querySelector(".sort-icon");
+          if (!icon) return;
+          if (th.dataset.sort === sortConfig.key) {
+            icon.textContent = sortConfig.dir === "asc" ? "↑" : "↓";
+            icon.classList.remove("text-muted");
+          } else {
+            icon.textContent = "↕";
+            icon.classList.add("text-muted");
+          }
+        });
+
+        tbody.innerHTML = filtered.length ? filtered.map(o => `
+          <tr>
+            <td>
+              <b class="text-primary">${escapeHTML(o.id)}</b>
+              <div class="small-muted">${escapeHTML(o.date)}</div>
+            </td>
+            <td>
+              <b>${escapeHTML(o.customerName)}</b>
+              <div class="small-muted">${escapeHTML(o.fulfilment)}</div>
+            </td>
+            <td>
+              <b>${money(o.total)}</b>
+              <div class="small-muted">${escapeHTML(o.paymentStatus)}</div>
+            </td>
+            <td>
+              <select class="form-select form-select-sm change-order-status" data-id="${o.id}" style="width: 135px;">
+                <option value="Pending" ${o.status === "Pending" ? "selected" : ""}>Pending</option>
+                <option value="Completed" ${o.status === "Completed" ? "selected" : ""}>Completed</option>
+                <option value="Cancelled" ${o.status === "Cancelled" ? "selected" : ""}>Cancelled</option>
+              </select>
+            </td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-1">
+                <button type="button" class="btn btn-sm btn-outline-primary view-order-btn" data-id="${o.id}">View</button>
+                <button type="button" class="btn btn-sm btn-outline-danger delete-order-btn" data-id="${o.id}">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join("") : `<tr><td colspan="5" class="text-center text-muted py-4">No orders match this filter.</td></tr>`;
+
+        // Tukar status pesanan
+        document.querySelectorAll(".change-order-status").forEach(sel => {
+          sel.addEventListener("change", () => {
+            const updated = getOrders().map(o => o.id === sel.dataset.id ? { ...o, status: sel.value } : o);
+            saveOrders(updated);
+            if (typeof toast === "function") toast(`Order ${sel.dataset.id} marked as ${sel.value}.`);
+            renderOrders();
+          });
+        });
+
+        // Buka Pop-out View
+        document.querySelectorAll(".view-order-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            openOrderViewModal(btn.dataset.id, true);
+          });
+        });
+
+        // Padam pesanan
+        document.querySelectorAll(".delete-order-btn").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const id = btn.dataset.id;
+            if (confirm(`Are you sure you want to delete order ${id}?`)) {
+              const updated = getOrders().filter(o => o.id !== id);
+              saveOrders(updated);
+              if (typeof toast === "function") toast(`Order ${id} deleted.`);
+              renderOrders();
+            }
+          });
+        });
+      }
+
+      // Event Sorting pada setiap header
+      document.querySelectorAll(".order-sort-th").forEach(th => {
+        th.addEventListener("click", () => {
+          const key = th.dataset.sort;
+          if (sortConfig.key === key) {
+            sortConfig.dir = sortConfig.dir === "asc" ? "desc" : "asc";
+          } else {
+            sortConfig.key = key;
+            sortConfig.dir = "asc";
+          }
+          renderOrders();
+        });
+      });
+
+      filterEl.addEventListener("change", renderOrders);
+      renderOrders();
+    });
+  </script>
+    </body>
+</html>

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Messages | UniMart</title>
+  <link rel="icon" type="image/png" href="image/logo.png">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body data-page="chat">
+  <div id="app-header"></div>
+  <div class="app-shell">
+    <aside id="app-sidebar"></aside>
+    <main class="main-content">
+      <div class="page-heading">
+        <span class="eyebrow" id="chat-eyebrow">BUYER MESSAGES</span>
+        <h1 id="chat-page-title">Chat with Sellers</h1>
+        <p id="chat-page-subtitle">Ask about product availability, custom options, or campus COD pickup locations.</p>
+      </div>
+
+      <div class="content-card p-0 overflow-hidden" style="border-radius: 22px;">
+        <div class="row g-0" style="min-height: 540px;">
+          
+          <!-- LAJUR KIRI: SENARAI PERBUALAN -->
+          <div class="col-md-4 border-end d-flex flex-column">
+            <div class="p-3 border-bottom">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h2 class="h6 fw-bold mb-0" id="chat-list-heading">Seller Conversations</h2>
+                <span class="badge bg-primary-subtle text-primary rounded-pill" id="chat-unread-count">0</span>
+              </div>
+              <input type="text" id="chat-search-input" class="form-control form-control-sm rounded-pill px-3" placeholder="Search seller or product...">
+            </div>
+
+<div id="chat-thread-list" class="list-group list-group-flush flex-grow-1 overflow-y-auto overflow-x-hidden" style="max-height: 460px;">
+</div>           
+          </div>
+
+          <!-- LAJUR KANAN: RUANG MESEJ AKTIF -->
+          <div class="col-md-8 d-flex flex-column">
+            <!-- Header Perbualan -->
+            <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center gap-2">
+                <div id="active-chat-avatar" style="width:42px;height:42px;border-radius:12px;background:rgba(124,58,237,0.14);color:#7c3aed;font-weight:700;display:grid;place-items:center;">U</div>
+                <div>
+                  <h3 class="h6 fw-bold mb-0" id="active-chat-name">Select a conversation</h3>
+                  <small class="text-muted" id="active-chat-product">No active inquiry</small>
+                </div>
+              </div>
+              <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1" id="active-chat-status">Online</span>
+            </div>
+
+            <!-- Badan Mesej -->
+            <div id="chat-messages-box" class="p-3 flex-grow-1 overflow-auto d-flex flex-column gap-2" style="max-height: 360px; min-height: 320px;">
+              <!-- Mesej dipaparkan di sini -->
+            </div>
+
+            <!-- Butang Balasan Pantas (Tukar automatik ikut Buyer / Seller) -->
+            <div class="px-3 pt-2 pb-1 border-top d-flex gap-2 flex-wrap" id="chat-quick-replies"></div>
+
+            <!-- Input Hantar Mesej -->
+            <form id="chat-send-form" class="p-3 pt-2 d-flex gap-2">
+              <input type="text" id="chat-message-input" class="form-control rounded-pill px-3" placeholder="Write a message..." required>
+              <button type="submit" class="btn btn-primary rounded-pill px-4" style="width: auto;">Send</button>
+            </form>
+          </div>
+
+        </div>
+      </div>
+
+      <div id="app-footer"></div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = typeof current === "function" ? current() : JSON.parse(localStorage.getItem("unimart_current") || "null");
+      const params = new URLSearchParams(window.location.search);
+
+      // Kesan secara automatik sama ada mod Seller atau Buyer
+      const isSellerMode =
+        params.get("mode") === "seller" ||
+        user?.role === "seller" ||
+        localStorage.getItem("unimart_active_role") === "seller";
+
+      const userId = user?.id || user?.email || "guest_user";
+      const STORAGE_KEY = (isSellerMode ? "unimart_seller_chats_" : "unimart_buyer_chats_") + userId;
+
+      // 1. TUKAR TEKS UI & QUICK REPLIES MENGIKUT MOD (BUYER vs SELLER)
+      const quickRepliesEl = document.getElementById("chat-quick-replies");
+      const searchInput = document.getElementById("chat-search-input");
+      const messageInput = document.getElementById("chat-message-input");
+
+      if (isSellerMode) {
+        document.getElementById("chat-eyebrow").textContent = "SELLER CENTRE · MESSAGES";
+        document.getElementById("chat-page-title").textContent = "Customer Inquiries";
+        document.getElementById("chat-page-subtitle").textContent = "Reply to student buyers, confirm stock availability, and arrange campus pickup or COD.";
+        document.getElementById("chat-list-heading").textContent = "Customer Chats";
+        if (searchInput) searchInput.placeholder = "Search customer or product...";
+        if (messageInput) messageInput.placeholder = "Reply to customer...";
+
+        quickRepliesEl.innerHTML = `
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill quick-msg-btn" data-msg="Hi! Yes, this item is still available and ready for order.">Stock available</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill quick-msg-btn" data-msg="We can COD at Kolej Melati lobby or PTAR Library at 5 PM.">Confirm COD spot</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill quick-msg-btn" data-msg="Thank you for your order! Preparing your item now.">Order received</button>
+        `;
+      } else {
+        document.getElementById("chat-eyebrow").textContent = "BUYER MESSAGES";
+        document.getElementById("chat-page-title").textContent = "Chat with Sellers";
+        document.getElementById("chat-page-subtitle").textContent = "Ask about product availability, custom options, or campus COD pickup locations.";
+        document.getElementById("chat-list-heading").textContent = "Seller Conversations";
+        if (searchInput) searchInput.placeholder = "Search seller or product...";
+        if (messageInput) messageInput.placeholder = "Write a message to seller...";
+
+        quickRepliesEl.innerHTML = `
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill quick-msg-btn" data-msg="Hi! Is this item still available?">Still available?</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill quick-msg-btn" data-msg="Can we COD around Kolej / Library today?">COD location?</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill quick-msg-btn" data-msg="Thank you! I have placed my order.">Order placed</button>
+        `;
+      }
+
+      // 2. DATA PERMULAAN MENGIKUT MOD
+      const defaultSellerThreads = [
+        {
+          id: "s-chat-1",
+          partnerName: "Nurul Aina (Student)",
+          productTitle: "Iced Matcha Latte (16oz)",
+          status: "Online",
+          unread: 1,
+          messages: [
+            { sender: "partner", text: "Hi! Can I order 2 Iced Matcha Lattes with less sweet for 5 PM pickup?", time: "03:45 PM" },
+            { sender: "me", text: "Hi Aina! Yes sure, we can prepare less sweet. Pickup at Kolej Melati lobby.", time: "03:47 PM" }
+          ]
+        },
+        {
+          id: "s-chat-2",
+          partnerName: "Danial Hakim",
+          productTitle: "A4 Color Printing & Binding",
+          status: "Active 5m ago",
+          unread: 0,
+          messages: [
+            { sender: "partner", text: "Hello, how long does it take to print and bind a 40-page report?", time: "12:10 PM" },
+            { sender: "me", text: "Around 15–20 minutes! Just send the PDF here or via WhatsApp.", time: "12:14 PM" }
+          ]
+        }
+      ];
+
+      const defaultBuyerThreads = [
+        {
+          id: "b-chat-1",
+          partnerName: "Melati Brew & Bites",
+          productTitle: "Iced Matcha Latte (16oz)",
+          status: "Online",
+          unread: 1,
+          messages: [
+            { sender: "me", text: "Hi! Is the Iced Matcha Latte available for pickup around 5 PM today?", time: "03:40 PM" },
+            { sender: "partner", text: "Hi! Yes, freshly whisked batch is available at Kolej Melati lobby until 7 PM.", time: "03:42 PM" }
+          ]
+        },
+        {
+          id: "b-chat-2",
+          partnerName: "PrintExpress Campus",
+          productTitle: "A4 Color Printing & Binding",
+          status: "Active 10m ago",
+          unread: 0,
+          messages: [
+            { sender: "me", text: "Hello, if I print 45 pages for my FYP draft, is comb binding free?", time: "11:15 AM" },
+            { sender: "partner", text: "Yes! Orders above 30 pages get free comb binding & clear cover.", time: "11:18 AM" }
+          ]
+        },
+        {
+          id: "b-chat-3",
+          partnerName: "Aiman Tech Preloved",
+          productTitle: "Casio Scientific Calculator fx-570EX",
+          status: "Online",
+          unread: 0,
+          messages: [
+            { sender: "me", text: "Hi, is the calculator still in good condition with original cover?", time: "Yesterday" },
+            { sender: "partner", text: "Yes, 9.5/10 condition, barely used for 1 semester. Can COD at PTAR Library.", time: "Yesterday" }
+          ]
+        }
+      ];
+
+      function getThreads() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+          if (Array.isArray(saved) && saved.length > 0) return saved;
+        } catch {}
+        const seed = isSellerMode ? defaultSellerThreads : defaultBuyerThreads;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
+        return seed;
+      }
+
+      function saveThreads(data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+
+      let threads = getThreads();
+      let activeThreadId = threads[0]?.id || null;
+
+      // Sokong pautan terus dari halaman produk (?seller=NamaKedai&product=NamaProduk)
+      const paramSeller = params.get("seller");
+      const paramProduct = params.get("product");
+      if (!isSellerMode && paramSeller) {
+        let existing = threads.find(t => t.partnerName.toLowerCase() === paramSeller.toLowerCase());
+        if (!existing) {
+          existing = {
+            id: "b-chat-" + Date.now(),
+            partnerName: paramSeller,
+            productTitle: paramProduct || "General Product Inquiry",
+            status: "Online",
+            unread: 0,
+            messages: [
+              { sender: "partner", text: `Hi! Welcome to ${paramSeller}. How can we help you today?`, time: "Now" }
+            ]
+          };
+          threads.unshift(existing);
+          saveThreads(threads);
+        } else if (paramProduct) {
+          existing.productTitle = paramProduct;
+          saveThreads(threads);
+        }
+        activeThreadId = existing.id;
+      }
+
+      const threadListEl = document.getElementById("chat-thread-list");
+      const messagesEl = document.getElementById("chat-messages-box");
+      const unreadBadgeEl = document.getElementById("chat-unread-count");
+
+      function renderThreadList(filterText = "") {
+        const q = filterText.trim().toLowerCase();
+        const filtered = threads.filter(t =>
+          t.partnerName.toLowerCase().includes(q) ||
+          t.productTitle.toLowerCase().includes(q)
+        );
+
+        const totalUnread = threads.reduce((sum, t) => sum + (t.unread || 0), 0);
+        if (unreadBadgeEl) unreadBadgeEl.textContent = totalUnread;
+
+        if (filtered.length === 0) {
+          threadListEl.innerHTML = `<div class="p-4 text-center text-muted small">No conversations found.</div>`;
+          return;
+        }
+
+threadListEl.innerHTML = filtered.map(t => {
+          const isActive = t.id === activeThreadId;
+          const lastMsg = t.messages[t.messages.length - 1];
+          const initial = (t.partnerName || "U").charAt(0).toUpperCase();
+
+          return `
+            <button type="button" class="list-group-item list-group-item-action p-3 border-bottom text-start chat-thread-btn" data-id="${t.id}" style="${isActive ? "background: rgba(124, 58, 237, 0.12); color: inherit; border-left: 4px solid #7c3aed;" : ""}">
+              <div class="d-flex align-items-center gap-2" style="min-width: 0;">
+                <div style="width:40px;height:40px;border-radius:12px;background:rgba(124,58,237,0.16);color:#7c3aed;font-weight:700;display:grid;place-items:center;flex-shrink:0;">
+                  ${initial}
+                </div>
+                <div class="flex-grow-1" style="min-width: 0;">
+                  <div class="d-flex justify-content-between align-items-center gap-2">
+                    <strong class="text-truncate small">${escapeHTML(t.partnerName)}</strong>
+                    <small class="text-muted flex-shrink-0" style="font-size: 11px;">${lastMsg ? lastMsg.time : ""}</small>
+                  </div>
+                  <div class="text-primary fw-semibold text-truncate" style="font-size: 11px;">
+                    Item: ${escapeHTML(t.productTitle)}
+                  </div>
+                  <div class="d-flex justify-content-between align-items-center mt-1 gap-2">
+                    <small class="text-muted text-truncate">${lastMsg ? escapeHTML(lastMsg.text) : "No messages yet"}</small>
+                    ${t.unread > 0 ? `<span class="badge bg-primary rounded-pill flex-shrink-0">${t.unread}</span>` : ""}
+                  </div>
+                </div>
+              </div>
+            </button>
+          `;
+        }).join("");
+      }
+      function renderActiveMessages() {
+        const currentThread = threads.find(t => t.id === activeThreadId);
+        if (!currentThread) return;
+
+        if (currentThread.unread > 0) {
+          currentThread.unread = 0;
+          saveThreads(threads);
+          renderThreadList(searchInput?.value || "");
+        }
+
+        document.getElementById("active-chat-name").textContent = currentThread.partnerName;
+        document.getElementById("active-chat-product").textContent =
+          (isSellerMode ? "Customer inquiry: " : "Inquiring about: ") + currentThread.productTitle;
+        document.getElementById("active-chat-avatar").textContent = currentThread.partnerName.charAt(0).toUpperCase();
+        document.getElementById("active-chat-status").textContent = currentThread.status || "Online";
+
+        messagesEl.innerHTML = currentThread.messages.map(m => {
+          const isMe = m.sender === "me";
+          return `
+            <div class="d-flex flex-column ${isMe ? "align-items-end" : "align-items-start"}">
+              <div class="px-3 py-2 rounded-4" style="max-width: 75%; ${isMe
+                ? "background: linear-gradient(135deg, #7c3aed, #6d28d9); color: #ffffff; border-bottom-right-radius: 4px;"
+                : "background: rgba(124, 58, 237, 0.1); border-bottom-left-radius: 4px;"}">
+                <div class="small">${escapeHTML(m.text)}</div>
+              </div>
+              <small class="text-muted mt-1" style="font-size: 10px;">${isMe ? "You" : currentThread.partnerName} · ${m.time}</small>
+            </div>
+          `;
+        }).join("");
+
+        messagesEl.scrollTop = messagesEl.scrollHeight;
+      }
+
+      threadListEl?.addEventListener("click", (e) => {
+        const btn = e.target.closest(".chat-thread-btn");
+        if (!btn) return;
+        activeThreadId = btn.dataset.id;
+        renderThreadList(searchInput?.value || "");
+        renderActiveMessages();
+      });
+
+      searchInput?.addEventListener("input", (e) => renderThreadList(e.target.value));
+
+      quickRepliesEl?.addEventListener("click", (e) => {
+        const btn = e.target.closest(".quick-msg-btn");
+        if (btn && messageInput) {
+          messageInput.value = btn.dataset.msg;
+          messageInput.focus();
+        }
+      });
+
+      document.getElementById("chat-send-form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = messageInput?.value.trim();
+        if (!text || !activeThreadId) return;
+
+        const currentThread = threads.find(t => t.id === activeThreadId);
+        if (!currentThread) return;
+
+        const nowStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        currentThread.messages.push({ sender: "me", text, time: nowStr });
+        saveThreads(threads);
+
+        messageInput.value = "";
+        renderThreadList(searchInput?.value || "");
+        renderActiveMessages();
+
+        // Auto-balasan simulasi daripada pihak lawan selepas 1.2 saat
+        setTimeout(() => {
+          const replyTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          const autoReply = isSellerMode
+            ? `Okay noted! I will proceed with "${currentThread.productTitle}". Thank you!`
+            : `Thanks for asking about "${currentThread.productTitle}"! We'll confirm shortly.`;
+
+          currentThread.messages.push({ sender: "partner", text: autoReply, time: replyTime });
+          saveThreads(threads);
+          renderThreadList(searchInput?.value || "");
+          renderActiveMessages();
+        }, 1200);
+      });
+
+      renderThreadList();
+      renderActiveMessages();
+    });
+  </script>
+</body>
+</html>
